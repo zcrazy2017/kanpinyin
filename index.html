@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>看拼音写词语 · 智能练习系统</title>
+<style>
+  /* ========== Reset & Base ========== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f4f8; color: #1a202c; min-height: 100vh;
+  }
+
+  /* ========== Header ========== */
+  .header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    box-shadow: 0 2px 12px rgba(102,126,234,0.3);
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+  .header h1 span { font-size: 26px; }
+  .header-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .header-controls label { font-size: 14px; opacity: 0.9; }
+  .header-controls select {
+    padding: 6px 12px; border: none; border-radius: 8px; font-size: 14px;
+    background: rgba(255,255,255,0.2); color: #fff; cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+  .header-controls select option { color: #1a202c; background: #fff; }
+  .btn-student-add {
+    background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5);
+    color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; transition: all 0.2s;
+  }
+  .btn-student-add:hover { background: rgba(255,255,255,0.35); }
+
+  /* ========== Tab Nav ========== */
+  .tab-nav {
+    display: flex; background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: 0 24px; gap: 0;
+  }
+  .tab-btn {
+    padding: 12px 24px; border: none; background: transparent; cursor: pointer;
+    font-size: 15px; color: #718096; font-weight: 500;
+    border-bottom: 3px solid transparent; transition: all 0.2s;
+  }
+  .tab-btn:hover { color: #667eea; background: #f7fafc; }
+  .tab-btn.active { color: #667eea; border-bottom-color: #667eea; font-weight: 600; }
+
+  /* ========== Main Container ========== */
+  .main { max-width: 1100px; margin: 0 auto; padding: 20px 24px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ========== Card ========== */
+  .card {
+    background: #fff; border-radius: 16px; padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 17px; font-weight: 600; margin-bottom: 16px;
+    color: #2d3748; display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ========== Form Elements ========== */
+  .form-row {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 16px;
+  }
+  .form-row label { font-size: 14px; color: #4a5568; font-weight: 500; }
+  input[type="text"], input[type="number"] {
+    padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 10px;
+    font-size: 15px; transition: border-color 0.2s; outline: none;
+    font-family: inherit;
+  }
+  input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+  input.pinyin-input { width: 120px; }
+  input.char-input { width: 80px; font-size: 20px; text-align: center; }
+  input.count-input { width: 70px; }
+
+  .btn {
+    padding: 8px 20px; border: none; border-radius: 10px; font-size: 14px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: #667eea; color: #fff; }
+  .btn-primary:hover { background: #5a6fd6; box-shadow: 0 2px 8px rgba(102,126,234,0.4); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-success { background: #48bb78; color: #fff; }
+  .btn-success:hover { background: #38a169; box-shadow: 0 2px 8px rgba(72,187,120,0.4); }
+  .btn-danger { background: #fc8181; color: #fff; }
+  .btn-danger:hover { background: #f56565; }
+  .btn-warning { background: #ed8936; color: #fff; }
+  .btn-warning:hover { background: #dd6b20; }
+  .btn-outline { background: transparent; color: #667eea; border: 2px solid #667eea; }
+  .btn-outline:hover { background: #ebf4ff; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 8px; }
+  .btn-ghost { background: transparent; color: #718096; border: 1px solid #e2e8f0; }
+  .btn-ghost:hover { background: #f7fafc; }
+
+  /* ========== Tags / Lists ========== */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; background: #ebf4ff; border-radius: 20px;
+    font-size: 14px; color: #4a5568;
+  }
+  .tag .remove {
+    cursor: pointer; color: #fc8181; font-weight: 700; font-size: 16px;
+    line-height: 1; transition: color 0.2s;
+  }
+  .tag .remove:hover { color: #f56565; }
+
+  .word-check-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 12px; }
+  .word-check-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: #f7fafc; border-radius: 10px;
+    border: 2px solid transparent; cursor: pointer; transition: all 0.15s;
+    font-size: 15px;
+  }
+  .word-check-item:hover { border-color: #c3d9ff; background: #ebf4ff; }
+  .word-check-item.checked { border-color: #667eea; background: #ebf4ff; }
+  .word-check-item .checkbox { width: 18px; height: 18px; accent-color: #667eea; }
+
+  /* ========== Practice Preview ========== */
+  .practice-summary {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .stat-badge {
+    background: #ebf4ff; padding: 8px 16px; border-radius: 10px;
+    font-size: 14px; color: #4a5568;
+  }
+  .stat-badge strong { color: #667eea; }
+
+  .practice-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+
+  /* ========== Correction Mode ========== */
+  .correct-list { display: flex; flex-direction: column; gap: 6px; }
+  .correct-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: #f7fafc; border-radius: 10px;
+    border: 2px solid transparent; transition: all 0.15s;
+  }
+  .correct-item .word-info { font-size: 16px; }
+  .correct-item .word-info .pinyin { color: #667eea; font-weight: 500; margin-right: 12px; }
+  .correct-item .word-info .hanzi { color: #a0aec0; }
+  .correct-actions { display: flex; gap: 6px; }
+  .btn-correct { min-width: 44px; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+  .btn-correct.right { background: #c6f6d5; color: #276749; border: 2px solid #9ae6b4; }
+  .btn-correct.right.active { background: #48bb78; color: #fff; border-color: #48bb78; }
+  .btn-correct.wrong { background: #fed7d7; color: #9b2c2c; border: 2px solid #feb2b2; }
+  .btn-correct.wrong.active { background: #fc8181; color: #fff; border-color: #fc8181; }
+
+  /* ========== Char/Word Management ========== */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .data-table th { text-align: left; padding: 8px 10px; border-bottom: 2px solid #e2e8f0; color: #718096; font-weight: 600; }
+  .data-table td { padding: 8px 10px; border-bottom: 1px solid #f0f4f8; }
+  .data-table tr:hover td { background: #f7fafc; }
+
+  .empty-msg { color: #a0aec0; font-size: 14px; padding: 20px 0; text-align: center; }
+
+  /* ========== Toast ========== */
+  .toast-container {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    padding: 12px 20px; border-radius: 12px; color: #fff; font-size: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    animation: slideIn 0.3s ease;
+  }
+  .toast.success { background: #48bb78; }
+  .toast.error { background: #fc8181; }
+  .toast.info { background: #667eea; }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ========== Modal ========== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);
+    justify-content: center; align-items: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 20px; padding: 28px; width: 90%; max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal h3 { margin-bottom: 16px; font-size: 18px; }
+  .modal .form-row { margin-bottom: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ========== Pinyin Auto-Detect ========== */
+  .pinyin-detect-status {
+    font-size: 13px; margin-top: 4px; min-height: 22px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .pinyin-detect-status .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid #e2e8f0; border-top-color: #667eea;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .pinyin-options {
+    display: inline-flex; gap: 6px; flex-wrap: wrap;
+  }
+  .pinyin-option-btn {
+    padding: 2px 12px; border-radius: 14px; border: 2px solid #667eea;
+    background: #fff; color: #667eea; font-size: 13px; cursor: pointer;
+    font-family: inherit; font-weight: 500; transition: all 0.15s;
+  }
+  .pinyin-option-btn:hover { background: #ebf4ff; }
+  .pinyin-option-btn.selected { background: #667eea; color: #fff; }
+
+  /* ========== Print Styles ========== */
+  .print-area { display: none; }
+  @media print {
+    body { background: #fff; }
+    .header, .tab-nav, .main, .toast-container, .modal-overlay { display: none !important; }
+    .print-area { display: block !important; }
+    @page { size: A4 portrait; margin: 15mm; }
+    .print-page {
+      width: 100%; page-break-after: always;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .print-page:last-child { page-break-after: auto; }
+    .print-title { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .print-subtitle { text-align: right; font-size: 14px; color: #666; margin-bottom: 16px; }
+    .print-table { width: 100%; border-collapse: collapse; }
+    .print-table td {
+      width: 20%; height: 48px; padding: 6px 8px;
+      border: 1px solid #333; text-align: center; vertical-align: bottom;
+      font-size: 16px;
+    }
+    .print-table td .pinyin {
+      display: block; font-size: 16px; font-weight: 500; margin-bottom: 4px;
+    }
+    .print-table td .underline {
+      display: block; border-bottom: 1.5px solid #333; width: 80%; margin: 0 auto; height: 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== Header ==================== -->
+<header class="header">
+  <h1><span>📖</span> 看拼音写词语 · 智能练习系统</h1>
+  <div class="header-controls">
+    <label for="studentSelect">👤 学生</label>
+    <select id="studentSelect"></select>
+    <button class="btn-student-add" onclick="showAddStudentModal()">➕ 添加</button>
+  </div>
+</header>
+
+<!-- ==================== Tab Navigation ==================== -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="practice" onclick="switchTab('practice')">📝 出题</button>
+  <button class="tab-btn" data-tab="library" onclick="switchTab('library')">📚 字库管理</button>
+</nav>
+
+<!-- ==================== Main Content ==================== -->
+<div class="main">
+
+  <!-- ===== Practice Panel ===== -->
+  <div class="panel active" id="panel-practice">
+    <div class="card">
+      <div class="card-title">📝 今日练习</div>
+      <div id="practiceStatus">
+        <p class="empty-msg">暂无练习数据。请先在「字库管理」中添加字和词语。</p>
+      </div>
+      <div id="practiceContent" style="display:none;">
+        <div class="practice-summary" id="practiceSummary"></div>
+        <div class="practice-actions" id="practiceActions"></div>
+        <div id="practicePreview"></div>
+        <div id="correctionSection" style="display:none;">
+          <hr style="border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <span style="font-size:18px; font-weight:600;">✏️ 批改</span>
+            <span style="font-size:13px; color:#718096;">逐词标记对错，然后提交</span>
+          </div>
+          <div class="correct-list" id="correctList"></div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-success" onclick="submitCorrection()">📊 提交批改结果</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Library Panel ===== -->
+  <div class="panel" id="panel-library">
+    <!-- Add Character -->
+    <div class="card">
+      <div class="card-title">🔤 添加单字</div>
+      <div class="form-row">
+        <label>字</label>
+        <input type="text" class="char-input" id="charInput" maxlength="2" placeholder="如: 春" autocomplete="off">
+        <label>拼音</label>
+        <input type="text" class="pinyin-input" id="pinyinInput" placeholder="自动识别或手动输入" autocomplete="off">
+        <button class="btn btn-primary" onclick="addChar()">➕ 添加</button>
+      </div>
+      <div class="pinyin-detect-status" id="pinyinDetectStatus"></div>
+      <div style="font-size:13px; color:#718096;">
+        💡 输入汉字后自动识别拼音，多音字可点选；也支持手动输入
+      </div>
+    </div>
+
+    <!-- Compose Words -->
+    <div class="card">
+      <div class="card-title">🔗 组词</div>
+
+      <!-- Method A: Auto-compose -->
+      <div style="margin-bottom:16px;">
+        <h4 style="font-size:14px; color:#4a5568; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#667eea; color:#fff; font-size:12px; font-weight:700;">A</span>
+          选字自动组合
+        </h4>
+        <p style="font-size:14px; color:#718096; margin-bottom:10px;">
+          选择一个字，自动列出正确的两字词语（选中字在前）。已存在的词不显示。如需其他组合，请用下方的「手动输入」。
+        </p>
+        <div class="form-row">
+          <label>选字</label>
+          <select id="composeCharSelect" style="padding:8px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:15px;">
+            <option value="">— 请先添加字 —</option>
+          </select>
+        </div>
+        <div id="composeResults">
+          <p class="empty-msg">选择一个字后显示可组成的词语。</p>
+        </div>
+      </div>
+
+      <!-- Method B: Manual input -->
+      <div>
+        <h4 style="font-size:14px; color:#4a5568; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#48bb78; color:#fff; font-size:12px; font-weight:700;">B</span>
+          手动输入词语
+        </h4>
+        <p style="font-size:14px; color:#718096; margin-bottom:10px;">
+          用已有字自由组合成词语（如「好天」），拼音自动拼接。输入后按回车或点添加。
+        </p>
+        <div class="form-row">
+          <label>词语</label>
+          <input type="text" id="manualWordInput" placeholder="如: 好天" style="width:120px; font-size:18px; text-align:center;" autocomplete="off">
+          <button class="btn btn-success btn-sm" onclick="addManualWord()">➕ 添加词语</button>
+        </div>
+        <div id="manualWordStatus" style="font-size:13px; min-height:22px;"></div>
+      </div>
+    </div>
+
+    <!-- Current Data -->
+    <div class="card">
+      <div class="card-title">📋 当前字库与词库</div>
+      <div class="two-col">
+        <div>
+          <h4 style="font-size:14px; color:#4a5568; margin-bottom:8px;">字库（共 <span id="charCount">0</span> 个）</h4>
+          <div id="charList"><p class="empty-msg">暂无字</p></div>
+        </div>
+        <div>
+          <h4 style="font-size:14px; color:#4a5568; margin-bottom:8px;">词库（共 <span id="wordCount">0</span> 个）</h4>
+          <div id="wordList"><p class="empty-msg">暂无词</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== Print Area ==================== -->
+<div class="print-area" id="printArea"></div>
+
+<!-- ==================== Toast Container ==================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== Add Student Modal ==================== -->
+<div class="modal-overlay" id="addStudentModal">
+  <div class="modal">
+    <h3>➕ 添加学生</h3>
+    <div class="form-row">
+      <label>姓名</label>
+      <input type="text" id="newStudentName" placeholder="输入学生姓名" style="flex:1;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeAddStudentModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmAddStudent()">确定添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== JavaScript ==================== -->
+<script>
+// ============================================================
+//  DATA LAYER
+// ============================================================
+const STORAGE_KEY = 'kanpinyin_data';
+
+function getDefaultData() {
+  return { dict: {}, words: [], students: [] };
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      // ensure structure
+      if (!data.dict) data.dict = {};
+      if (!data.words) data.words = [];
+      if (!data.students) data.students = [];
+      return data;
+    }
+  } catch (e) { /* ignore */ }
+  return getDefaultData();
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let appData = loadData();
+
+function getCurrentStudent() {
+  const sel = document.getElementById('studentSelect');
+  const id = sel.value;
+  let s = appData.students.find(st => st.id === id);
+  if (!s && appData.students.length > 0) {
+    s = appData.students[0];
+  }
+  return s;
+}
+
+function ensureStudent() {
+  let s = getCurrentStudent();
+  if (!s) {
+    // auto-create default student
+    s = { id: 'stu1', name: '同学', errorWordIds: [], wordStats: {}, practiceLog: [] };
+    appData.students.push(s);
+    saveData(appData);
+  }
+  return s;
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function toast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.remove(); }, 2500);
+}
+
+// ============================================================
+//  STUDENT MANAGEMENT
+// ============================================================
+function renderStudentSelect() {
+  const sel = document.getElementById('studentSelect');
+  const currentId = sel.value;
+  sel.innerHTML = '';
+  if (appData.students.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = '— 暂无学生 —';
+    sel.appendChild(opt);
+  } else {
+    appData.students.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+  }
+  if (currentId && appData.students.some(s => s.id === currentId)) {
+    sel.value = currentId;
+  }
+}
+
+function showAddStudentModal() {
+  document.getElementById('newStudentName').value = '';
+  document.getElementById('addStudentModal').classList.add('show');
+  setTimeout(() => document.getElementById('newStudentName').focus(), 100);
+}
+
+function closeAddStudentModal() {
+  document.getElementById('addStudentModal').classList.remove('show');
+}
+
+function confirmAddStudent() {
+  const name = document.getElementById('newStudentName').value.trim();
+  if (!name) { toast('请输入学生姓名', 'error'); return; }
+  const id = 'stu_' + generateId();
+  appData.students.push({
+    id, name,
+    errorWordIds: [],
+    wordStats: {},
+    practiceLog: []
+  });
+  saveData(appData);
+  renderStudentSelect();
+  document.getElementById('studentSelect').value = id;
+  closeAddStudentModal();
+  toast(`已添加学生「${name}」`);
+  refreshAll();
+}
+
+// ============================================================
+//  TAB SWITCHING
+// ============================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  if (name === 'library') refreshLibrary();
+  if (name === 'practice') refreshPractice();
+}
+
+// ============================================================
+//  PINYIN AUTO-DETECT — 调用本地 Python 后端 API
+// ============================================================
+const PINYIN_API = 'http://localhost:5001/api/pinyin';
+let _selectedPinyin = null; // user-selected pinyin from multi-pronunciation picker
+let _pinyinDetectTimer = null;
+
+async function detectPinyin(ch) {
+  const statusEl = document.getElementById('pinyinDetectStatus');
+  const pinyinInput = document.getElementById('pinyinInput');
+
+  if (!ch || !/^[\u4e00-\u9fff]$/.test(ch)) {
+    statusEl.innerHTML = '';
+    _selectedPinyin = null;
+    return;
+  }
+
+  try {
+    const resp = await fetch(`${PINYIN_API}?char=${encodeURIComponent(ch)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const pinyins = data.pinyins || [];
+
+    if (pinyins.length === 0) {
+      statusEl.innerHTML = '<span style="color:#a0aec0;">未能识别拼音，请手动输入</span>';
+      _selectedPinyin = null;
+      return;
+    }
+
+    if (pinyins.length === 1) {
+      // 单音字
+      pinyinInput.value = pinyins[0];
+      _selectedPinyin = pinyins[0];
+      statusEl.innerHTML = `<span style="color:#48bb78;">✅ 已识别：${pinyins[0]}</span>`;
+    } else {
+      // 多音字 — 显示选项按钮
+      pinyinInput.value = '';
+      _selectedPinyin = null;
+      let html = '<span style="color:#ed8936;">🔊 多音字，请选择拼音：</span>';
+      html += '<span class="pinyin-options">';
+      pinyins.forEach(py => {
+        const safePy = py.replace(/'/g, "\\'");
+        html += `<button class="pinyin-option-btn" onclick="selectPinyinOption('${safePy}')">${py}</button>`;
+      });
+      html += '</span>';
+      statusEl.innerHTML = html;
+    }
+  } catch (e) {
+    console.warn('Pinyin API 请求失败:', e);
+    statusEl.innerHTML = '<span style="color:#fc8181;">⚠️ 后端服务未启动，请手动输入拼音</span>';
+    _selectedPinyin = null;
+  }
+}
+
+function selectPinyinOption(py) {
+  const pinyinInput = document.getElementById('pinyinInput');
+  const statusEl = document.getElementById('pinyinDetectStatus');
+  pinyinInput.value = py;
+  _selectedPinyin = py;
+
+  // Update UI to show selection
+  const btns = statusEl.querySelectorAll('.pinyin-option-btn');
+  btns.forEach(b => b.classList.toggle('selected', b.textContent === py));
+}
+
+function onCharInput() {
+  clearTimeout(_pinyinDetectTimer);
+  const ch = document.getElementById('charInput').value.trim();
+
+  // If user manually edited pinyin, don't auto-detect
+  // Only auto-detect when pinyin input is empty or was auto-filled
+  if (!ch) {
+    document.getElementById('pinyinDetectStatus').innerHTML = '';
+    return;
+  }
+
+  // Show loading
+  const statusEl = document.getElementById('pinyinDetectStatus');
+  statusEl.innerHTML = '<span class="spinner"></span> 正在识别拼音...';
+
+  _pinyinDetectTimer = setTimeout(() => detectPinyin(ch), 200);
+}
+
+// ============================================================
+//  CHARACTER MANAGEMENT
+// ============================================================
+function addChar() {
+  const charInput = document.getElementById('charInput');
+  const pinyinInput = document.getElementById('pinyinInput');
+  const ch = charInput.value.trim();
+  let py = pinyinInput.value.trim().toLowerCase();
+
+  // If manual pinyin was typed, use it; otherwise use detected
+  if (!py && _selectedPinyin) {
+    py = _selectedPinyin;
+  }
+
+  if (!ch) { toast('请输入字', 'error'); return; }
+  if (!py) { toast('请输入拼音', 'error'); return; }
+  if (appData.dict[ch]) { toast(`字「${ch}」已存在`, 'error'); return; }
+  appData.dict[ch] = { pinyin: py };
+  saveData(appData);
+  charInput.value = '';
+  pinyinInput.value = '';
+  document.getElementById('pinyinDetectStatus').innerHTML = '';
+  _selectedPinyin = null;
+  toast(`已添加字「${ch}」(${py})`);
+  refreshLibrary();
+  charInput.focus();
+}
+
+function removeChar(ch) {
+  if (!confirm(`确定删除字「${ch}」吗？相关的词语也会被删除。`)) return;
+  // remove related words
+  const relatedWords = appData.words.filter(w => w.chars.includes(ch));
+  relatedWords.forEach(w => {
+    // remove from all students' errorWordIds and wordStats
+    appData.students.forEach(s => {
+      s.errorWordIds = s.errorWordIds.filter(id => id !== w.id);
+      delete s.wordStats[w.id];
+      s.practiceLog.forEach(log => {
+        log.words = log.words.filter(ww => ww.wordId !== w.id);
+      });
+    });
+  });
+  appData.words = appData.words.filter(w => !w.chars.includes(ch));
+  delete appData.dict[ch];
+  saveData(appData);
+  toast(`已删除字「${ch}」`);
+  refreshLibrary();
+}
+
+function removeWord(wordId) {
+  const w = appData.words.find(x => x.id === wordId);
+  if (!w) return;
+  if (!confirm(`确定删除词「${w.chars.join('')}」(${w.pinyin}) 吗？`)) return;
+  // remove from all students
+  appData.students.forEach(s => {
+    s.errorWordIds = s.errorWordIds.filter(id => id !== wordId);
+    delete s.wordStats[wordId];
+    s.practiceLog.forEach(log => {
+      log.words = log.words.filter(ww => ww.wordId !== wordId);
+    });
+  });
+  appData.words = appData.words.filter(x => x.id !== wordId);
+  saveData(appData);
+  toast(`已删除词「${w.chars.join('')}」`);
+  refreshLibrary();
+}
+
+// ============================================================
+//  WORD COMPOSITION
+// ============================================================
+async function refreshComposeSelect() {
+  const sel = document.getElementById('composeCharSelect');
+  const currentValue = sel.value;
+  sel.innerHTML = '<option value="">⏳ 正在筛选可组词的字...</option>';
+
+  const chars = Object.keys(appData.dict).sort();
+  if (chars.length < 2) {
+    sel.innerHTML = '<option value="">— 请至少添加2个字 —</option>';
+    return;
+  }
+
+  let composableChars = chars;
+
+  // 尝试从后端获取可组词的字列表
+  try {
+    const charsStr = chars.join(',');
+    const resp = await fetch(`http://localhost:5001/api/composable?chars=${encodeURIComponent(charsStr)}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.composable && data.composable.length > 0) {
+        composableChars = data.composable;
+      }
+    }
+  } catch (e) {
+    // 后端不可用，显示所有字
+    console.warn('Composable API unavailable, showing all chars', e);
+  }
+
+  sel.innerHTML = '<option value="">— 选择字 —</option>';
+  composableChars.forEach(ch => {
+    const opt = document.createElement('option');
+    opt.value = ch;
+    const hint = appData.dict[ch]?.pinyin || '';
+    opt.textContent = `${ch} (${hint})`;
+    sel.appendChild(opt);
+  });
+
+  // 如果当前选中的字仍在可组词列表中，保留选择
+  if (currentValue && composableChars.includes(currentValue)) {
+    sel.value = currentValue;
+  }
+
+  // 如果没有可组词的字
+  if (composableChars.length === 0) {
+    sel.innerHTML = '<option value="">— 暂无字可组词 —</option>';
+  }
+}
+
+async function onComposeCharChange() {
+  const sel = document.getElementById('composeCharSelect');
+  const ch = sel.value;
+  const container = document.getElementById('composeResults');
+  if (!ch) {
+    container.innerHTML = '<p class="empty-msg">选择一个字后显示可组成的词语。</p>';
+    return;
+  }
+  const others = Object.keys(appData.dict).filter(c => c !== ch).sort();
+  if (others.length === 0) {
+    container.innerHTML = '<p class="empty-msg">没有其他字可以组词，请先添加更多字。</p>';
+    return;
+  }
+
+  // 从后端 API 获取真实词语组合
+  const existing = new Set(appData.words.map(w => w.chars.join('')));
+  let validPairs = [];
+
+  try {
+    const withStr = others.join(',');
+    const resp = await fetch(`http://localhost:5001/api/compose?char=${encodeURIComponent(ch)}&with=${encodeURIComponent(withStr)}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      // Filter out already-existing words
+      validPairs = data.combinations.filter(pair => !existing.has(pair.join('')));
+    } else {
+      throw new Error('API error');
+    }
+  } catch (e) {
+    // Fallback: 后端不可用时，展示所有 ch+other 组合
+    console.warn('Compose API unavailable, using fallback', e);
+    others.forEach(other => {
+      const word = ch + other;
+      if (!existing.has(word)) {
+        validPairs.push([ch, other]);
+      }
+    });
+  }
+
+  if (validPairs.length === 0) {
+    container.innerHTML = '<p class="empty-msg">没有可组成的新词语（所有组合已是已有词语，或无真实词语可组）。</p>';
+    window._wordCandidates = [];
+    return;
+  }
+
+  const candidates = validPairs.map(pair => {
+    const word = pair.join('');
+    const py = appData.dict[pair[0]].pinyin + ' ' + appData.dict[pair[1]].pinyin;
+    return { chars: pair, display: word, pinyin: py };
+  });
+
+  let html = '<div class="word-check-list">';
+  candidates.forEach((c, i) => {
+    html += `<div class="word-check-item" data-idx="${i}" onclick="toggleWordCheck(${i})">
+      <input type="checkbox" class="checkbox" data-idx="${i}">
+      <span><strong>${c.display}</strong> <span style="color:#718096;font-size:13px;">${c.pinyin}</span></span>
+    </div>`;
+  });
+  html += '</div>';
+  html += '<div style="margin-top:12px;"><button class="btn btn-success" onclick="confirmWords()">✅ 保存选中的词语</button></div>';
+  let countMsg = `<div style="font-size:13px; color:#718096; margin-bottom:8px;">可选组合 <strong>${candidates.length}</strong> 个（已排除 ${appData.words.length} 个已有词 + 非真实词语）</div>`;
+  container.innerHTML = countMsg + html;
+  window._wordCandidates = candidates;
+}
+
+// ============================================================
+//  MANUAL WORD INPUT
+// ============================================================
+function addManualWord() {
+  const input = document.getElementById('manualWordInput');
+  const statusEl = document.getElementById('manualWordStatus');
+  const raw = input.value.trim();
+  if (!raw) { statusEl.innerHTML = '<span style="color:#fc8181;">请输入词语</span>'; return; }
+
+  const chars = [...raw];
+  // Validate all chars exist in dict
+  const missing = chars.filter(ch => !appData.dict[ch]);
+  if (missing.length > 0) {
+    statusEl.innerHTML = `<span style="color:#fc8181;">以下字不在字库中：${missing.join('、')}，请先添加</span>`;
+    return;
+  }
+
+  // Check if word already exists
+  const existing = new Set(appData.words.map(w => w.chars.join('')));
+  if (existing.has(raw)) {
+    statusEl.innerHTML = `<span style="color:#ed8936;">⚠️ 「${raw}」已存在于词库中</span>`;
+    return;
+  }
+
+  // Compute pinyin by concatenating each char's pinyin
+  const pyParts = chars.map(ch => appData.dict[ch].pinyin);
+  const pinyin = pyParts.join(' ');
+
+  // Add word
+  const id = appData.words.length > 0 ? Math.max(...appData.words.map(w => w.id)) + 1 : 0;
+  appData.words.push({ id, chars, pinyin });
+  saveData(appData);
+  input.value = '';
+  statusEl.innerHTML = `<span style="color:#48bb78;">✅ 已添加「${raw}」(${pinyin})</span>`;
+  toast(`已添加词语「${raw}」`);
+  refreshLibrary();
+  // Clear status after 3s
+  setTimeout(() => {
+    const s = document.getElementById('manualWordStatus');
+    if (s) s.innerHTML = '';
+  }, 3000);
+}
+
+function toggleWordCheck(idx) {
+  const items = document.querySelectorAll('.word-check-item');
+  if (items[idx]) {
+    items[idx].classList.toggle('checked');
+    const cb = items[idx].querySelector('input[type="checkbox"]');
+    if (cb) cb.checked = !cb.checked;
+  }
+}
+
+function confirmWords() {
+  const checked = document.querySelectorAll('.word-check-item.checked');
+  if (checked.length === 0) { toast('请勾选至少一个词语', 'error'); return; }
+  const candidates = window._wordCandidates || [];
+  const added = [];
+  checked.forEach(el => {
+    const idx = parseInt(el.dataset.idx);
+    const c = candidates[idx];
+    if (c) {
+      const id = appData.words.length > 0 ? Math.max(...appData.words.map(w => w.id)) + 1 : 0;
+      appData.words.push({ id, chars: c.chars, pinyin: c.pinyin });
+      added.push(c.display);
+    }
+  });
+  saveData(appData);
+  toast(`已确认添加 ${added.length} 个词语：${added.join('、')}`);
+  refreshLibrary();
+}
+
+// ============================================================
+//  LIBRARY RENDER
+// ============================================================
+function refreshLibrary() {
+  // Char list
+  const charEntries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+  document.getElementById('charCount').textContent = charEntries.length;
+  const charContainer = document.getElementById('charList');
+  if (charEntries.length === 0) {
+    charContainer.innerHTML = '<p class="empty-msg">暂无字</p>';
+  } else {
+    let html = '<div class="tag-list">';
+    charEntries.forEach(([ch, info]) => {
+      html += `<span class="tag">${ch} <span style="color:#718096;font-size:12px;">${info.pinyin}</span> <span class="remove" onclick="removeChar('${ch}')">×</span></span>`;
+    });
+    html += '</div>';
+    charContainer.innerHTML = html;
+  }
+
+  // Word list
+  document.getElementById('wordCount').textContent = appData.words.length;
+  const wordContainer = document.getElementById('wordList');
+  if (appData.words.length === 0) {
+    wordContainer.innerHTML = '<p class="empty-msg">暂无词</p>';
+  } else {
+    let html = '<div class="tag-list">';
+    appData.words.forEach(w => {
+      html += `<span class="tag">${w.chars.join('')} <span style="color:#718096;font-size:12px;">${w.pinyin}</span> <span class="remove" onclick="removeWord(${w.id})">×</span></span>`;
+    });
+    html += '</div>';
+    wordContainer.innerHTML = html;
+  }
+
+  // Compose select
+  refreshComposeSelect();
+}
+
+// ============================================================
+//  PRACTICE GENERATION
+// ============================================================
+function weightedRandom(items, weightFunc) {
+  const weights = items.map(weightFunc);
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+  if (totalWeight <= 0) return null;
+  let r = Math.random() * totalWeight;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generatePractice(student, totalWords = 50) {
+  const allWords = appData.words;
+  if (allWords.length === 0) return [];
+  if (allWords.length <= totalWords) {
+    return shuffle(allWords.map(w => ({ wordId: w.id, chars: w.chars, pinyin: w.pinyin })));
+  }
+
+  // 1. Pick error words
+  const errorPool = student.errorWordIds || [];
+  const errorCount = Math.min(5, errorPool.length);
+  const pickedErrorIds = new Set();
+  const shuffledError = shuffle(errorPool);
+  const errorWords = [];
+  for (let i = 0; i < errorCount; i++) {
+    const wid = shuffledError[i];
+    const w = appData.words.find(x => x.id === wid);
+    if (w) {
+      errorWords.push({ wordId: w.id, chars: w.chars, pinyin: w.pinyin });
+      pickedErrorIds.add(w.id);
+    }
+  }
+
+  // 2. Weighted random for remaining
+  const remaining = allWords.filter(w => !pickedErrorIds.has(w.id));
+  const needed = totalWords - errorWords.length;
+  const result = [...errorWords];
+
+  // weighted pick without replacement
+  const pool = [...remaining];
+  for (let i = 0; i < needed && pool.length > 0; i++) {
+    const idx = weightedRandom(pool, w => {
+      const stats = (student.wordStats || {})[w.id];
+      const total = stats ? stats.total : 0;
+      return 1 / (total + 1);
+    });
+    if (idx == null) break;
+    const picked = pool.splice(idx, 1)[0];
+    result.push({ wordId: picked.id, chars: picked.chars, pinyin: picked.pinyin });
+  }
+
+  return shuffle(result);
+}
+
+// ============================================================
+//  PRACTICE RENDER
+// ============================================================
+function refreshPractice() {
+  const student = ensureStudent();
+  const today = new Date().toISOString().slice(0, 10);
+  const existingLog = (student.practiceLog || []).find(log => log.date === today);
+
+  const statusEl = document.getElementById('practiceStatus');
+  const contentEl = document.getElementById('practiceContent');
+
+  const hasEnoughWords = appData.words.length > 0;
+
+  if (!hasEnoughWords) {
+    statusEl.style.display = 'block';
+    contentEl.style.display = 'none';
+    statusEl.innerHTML = '<p class="empty-msg">📭 词库为空。请先在「字库管理」中添加字和词语。</p>';
+    return;
+  }
+
+  statusEl.style.display = 'none';
+  contentEl.style.display = 'block';
+
+  const summaryEl = document.getElementById('practiceSummary');
+  const actionsEl = document.getElementById('practiceActions');
+  const previewEl = document.getElementById('practicePreview');
+  const correctEl = document.getElementById('correctionSection');
+
+  if (existingLog) {
+    // Already generated today
+    const words = existingLog.words.map(w => {
+      const wordObj = appData.words.find(x => x.id === w.wordId);
+      return wordObj ? { wordId: w.wordId, chars: wordObj.chars, pinyin: wordObj.pinyin, correct: w.correct } : null;
+    }).filter(Boolean);
+
+    summaryEl.innerHTML = `
+      <span class="stat-badge">📅 ${today}</span>
+      <span class="stat-badge">📝 共 <strong>${words.length}</strong> 词</span>
+    `;
+    actionsEl.innerHTML = `
+      <button class="btn btn-primary" onclick="printPractice()">🖨️ 打印</button>
+      <button class="btn btn-warning" onclick="showCorrection()">✏️ 批改</button>
+    `;
+    previewEl.innerHTML = renderPracticePreview(words);
+    correctEl.style.display = 'none';
+    window._currentPractice = words;
+  } else {
+    // Not yet generated
+    summaryEl.innerHTML = `
+      <span class="stat-badge">📅 ${today}</span>
+      <span class="stat-badge">词库共 <strong>${appData.words.length}</strong> 词</span>
+    `;
+    actionsEl.innerHTML = `
+      <button class="btn btn-success" onclick="generateTodayPractice()">🎲 生成今日练习</button>
+    `;
+    previewEl.innerHTML = '<p class="empty-msg">点击「生成今日练习」开始。</p>';
+    correctEl.style.display = 'none';
+  }
+}
+
+function renderPracticePreview(words) {
+  if (words.length === 0) return '<p class="empty-msg">暂无练习。</p>';
+  let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px;">';
+  words.forEach((w, i) => {
+    html += `<div style="padding:8px 12px; background:#f7fafc; border-radius:8px; font-size:15px;">
+      <span style="color:#a0aec0; margin-right:8px;">${i + 1}.</span>
+      <span style="color:#667eea; font-weight:500;">${w.pinyin}</span>
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function generateTodayPractice() {
+  const student = ensureStudent();
+  const today = new Date().toISOString().slice(0, 10);
+
+  if ((student.practiceLog || []).some(log => log.date === today)) {
+    toast('今日练习已生成，请勿重复生成', 'error');
+    refreshPractice();
+    return;
+  }
+
+  const practice = generatePractice(student);
+  if (practice.length === 0) {
+    toast('词库不足，无法生成练习', 'error');
+    return;
+  }
+
+  const logEntry = {
+    date: today,
+    words: practice.map(w => ({ wordId: w.wordId, correct: null }))
+  };
+  if (!student.practiceLog) student.practiceLog = [];
+  student.practiceLog.push(logEntry);
+  saveData(appData);
+
+  toast(`已生成 ${practice.length} 道练习`);
+  refreshPractice();
+}
+
+// ============================================================
+//  CORRECTION
+// ============================================================
+function showCorrection() {
+  const student = ensureStudent();
+  const today = new Date().toISOString().slice(0, 10);
+  const log = (student.practiceLog || []).find(l => l.date === today);
+  if (!log) { toast('没有找到今日练习', 'error'); return; }
+
+  const words = log.words.map(w => {
+    const wordObj = appData.words.find(x => x.id === w.wordId);
+    return wordObj ? { ...w, chars: wordObj.chars, pinyin: wordObj.pinyin } : null;
+  }).filter(Boolean);
+
+  if (words.length === 0) { toast('练习数据异常', 'error'); return; }
+
+  const container = document.getElementById('correctList');
+  let html = '';
+  words.forEach((w, i) => {
+    const rightActive = w.correct === true ? 'active' : '';
+    const wrongActive = w.correct === false ? 'active' : '';
+    html += `<div class="correct-item" data-index="${i}">
+      <div class="word-info">
+        <span class="pinyin">${w.pinyin}</span>
+        <span class="hanzi">${w.chars.join('')}</span>
+      </div>
+      <div class="correct-actions">
+        <button class="btn btn-correct right ${rightActive}" onclick="markCorrect(${i}, true)">✓ 对</button>
+        <button class="btn btn-correct wrong ${wrongActive}" onclick="markCorrect(${i}, false)">✗ 错</button>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+
+  document.getElementById('correctionSection').style.display = 'block';
+  window._correctionIndex = 0;
+}
+
+function markCorrect(index, isCorrect) {
+  const items = document.querySelectorAll('.correct-item');
+  const item = items[index];
+  if (!item) return;
+  const rightBtn = item.querySelector('.btn-correct.right');
+  const wrongBtn = item.querySelector('.btn-correct.wrong');
+  rightBtn.classList.toggle('active', isCorrect === true);
+  wrongBtn.classList.toggle('active', isCorrect === false);
+
+  // Update the log in memory
+  const student = ensureStudent();
+  const today = new Date().toISOString().slice(0, 10);
+  const log = (student.practiceLog || []).find(l => l.date === today);
+  if (log && log.words[index] != null) {
+    log.words[index].correct = isCorrect;
+  }
+}
+
+function submitCorrection() {
+  const student = ensureStudent();
+  const today = new Date().toISOString().slice(0, 10);
+  const log = (student.practiceLog || []).find(l => l.date === today);
+  if (!log) { toast('没有找到今日练习', 'error'); return; }
+
+  const unchecked = log.words.some(w => w.correct === null);
+  if (unchecked) {
+    if (!confirm('还有未标记的词语，确定提交吗？未标记的将视为正确。')) return;
+  }
+
+  log.words.forEach(w => {
+    const isCorrect = w.correct !== false; // null or true => correct
+    const stats = student.wordStats[w.wordId] || { total: 0, wrong: 0, lastDate: '' };
+    stats.total = (stats.total || 0) + 1;
+    if (!isCorrect) stats.wrong = (stats.wrong || 0) + 1;
+    stats.lastDate = today;
+    student.wordStats[w.wordId] = stats;
+
+    // Update errorWordIds
+    if (!isCorrect) {
+      if (!student.errorWordIds.includes(w.wordId)) {
+        student.errorWordIds.push(w.wordId);
+      }
+    } else {
+      student.errorWordIds = student.errorWordIds.filter(id => id !== w.wordId);
+    }
+  });
+
+  saveData(appData);
+  toast('✅ 批改结果已保存！');
+  document.getElementById('correctionSection').style.display = 'none';
+  refreshPractice();
+}
+
+// ============================================================
+//  PRINT
+// ============================================================
+function printPractice() {
+  const student = ensureStudent();
+  const today = new Date().toISOString().slice(0, 10);
+  const log = (student.practiceLog || []).find(l => l.date === today);
+  if (!log || log.words.length === 0) { toast('没有练习可打印', 'error'); return; }
+
+  const words = log.words.map(w => {
+    const wordObj = appData.words.find(x => x.id === w.wordId);
+    return wordObj ? { chars: wordObj.chars, pinyin: wordObj.pinyin } : null;
+  }).filter(Boolean);
+
+  // Split into pages (25 per page)
+  const perPage = 25;
+  const pages = [];
+  for (let i = 0; i < words.length; i += perPage) {
+    pages.push(words.slice(i, i + perPage));
+  }
+
+  let html = '';
+  pages.forEach((pageWords, pageIdx) => {
+    html += `<div class="print-page">
+      <div class="print-title">看拼音写词语</div>
+      <div class="print-subtitle">姓名：${student.name}　　日期：${today}</div>
+      <table class="print-table">`;
+
+    // 5 columns x rows
+    const cols = 5;
+    const rows = Math.ceil(pageWords.length / cols);
+    let idx = 0;
+    for (let r = 0; r < rows; r++) {
+      html += '<tr>';
+      for (let c = 0; c < cols; c++) {
+        if (idx < pageWords.length) {
+          const w = pageWords[idx];
+          html += `<td><span class="pinyin">${w.pinyin}</span><span class="underline"></span></td>`;
+        } else {
+          html += '<td></td>';
+        }
+        idx++;
+      }
+      html += '</tr>';
+    }
+    html += '</table></div>';
+  });
+
+  document.getElementById('printArea').innerHTML = html;
+  setTimeout(() => window.print(), 200);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+function refreshAll() {
+  renderStudentSelect();
+  const activeTab = document.querySelector('.tab-btn.active');
+  if (activeTab) switchTab(activeTab.dataset.tab);
+}
+
+// Auto-init student on select change
+document.getElementById('studentSelect').addEventListener('change', () => {
+  refreshAll();
+});
+
+// Enter key support
+document.getElementById('charInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addChar();
+});
+document.getElementById('pinyinInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addChar();
+});
+
+// Manual word input Enter key
+document.getElementById('manualWordInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addManualWord();
+});
+
+// Auto-detect pinyin on character input
+document.getElementById('charInput').addEventListener('input', onCharInput);
+
+// Allow manual pinyin editing — if user starts typing manually, clear detected selection
+document.getElementById('pinyinInput').addEventListener('input', function() {
+  if (this.value !== _selectedPinyin) {
+    _selectedPinyin = null;
+  }
+});
+document.getElementById('newStudentName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmAddStudent();
+});
+
+// Compose char select change
+document.getElementById('composeCharSelect').addEventListener('change', onComposeCharChange);
+
+// Initialize
+renderStudentSelect();
+ensureStudent();
+refreshAll();
+</script>
+
+</body>
+</html>
