@@ -1534,9 +1534,23 @@ function refreshHistory() {
 //  DICT — 字典浏览（按拼音首字母分组）
 // ============================================================
 let _dictActiveLetter = 'A';
+let _dictCategoryFilter = ''; // 选中的分类ID，空表示全部
+
+function setDictCategoryFilter(catId) {
+  _dictCategoryFilter = catId;
+  _dictActiveLetter = 'A';
+  renderDict();
+}
 
 function renderDict() {
-  const entries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+  // 渲染分类过滤栏
+  renderDictCategoryFilter();
+
+  let entries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+  // 按分类过滤
+  if (_dictCategoryFilter) {
+    entries = entries.filter(([ch, info]) => info.categoryId === _dictCategoryFilter);
+  }
   if (entries.length === 0) {
     document.getElementById('dictCharList').innerHTML = '<p class="empty-msg">暂无字库，请先在字词管理中导入汉字</p>';
     return;
@@ -1674,6 +1688,30 @@ function toggleShowAllAddChars() {
     const catName = getCategoryNameById(appData.categories || [], _activeAddCatId) || '';
     showAddCharsToCategory(_activeAddCatId, catName);
   }
+}
+
+// 渲染字典分类过滤栏
+function renderDictCategoryFilter() {
+  const container = document.getElementById('dictCategoryFilter');
+  if (!container) return;
+  const flat = getAllCategoriesFlat(appData.categories || []);
+  let html = `<span onclick="setDictCategoryFilter('')"
+    style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;cursor:pointer;font-size:12px;transition:all 0.15s;user-select:none;
+           border:2px solid ${!_dictCategoryFilter ? '#667eea' : '#e2e8f0'};
+           background:${!_dictCategoryFilter ? '#ebf4ff' : '#fff'};
+           color:${!_dictCategoryFilter ? '#667eea' : '#718096'};
+           font-weight:${!_dictCategoryFilter ? '600' : '400'};">全部 (${Object.keys(appData.dict).length})</span>`;
+  flat.forEach(c => {
+    const count = Object.values(appData.dict).filter(d => d.categoryId === c.id).length;
+    const isActive = _dictCategoryFilter === c.id;
+    html += `<span onclick="setDictCategoryFilter('${c.id}')"
+      style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;cursor:pointer;font-size:12px;transition:all 0.15s;user-select:none;
+             border:2px solid ${isActive ? '#667eea' : '#e2e8f0'};
+             background:${isActive ? '#ebf4ff' : '#fff'};
+             color:${isActive ? '#667eea' : '#718096'};
+             font-weight:${isActive ? '600' : '400'};">${c.name} (${count})</span>`;
+  });
+  container.innerHTML = html;
 }
 
 // 编辑字的拼音

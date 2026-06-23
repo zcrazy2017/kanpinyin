@@ -387,7 +387,6 @@
         <div style="display:flex;gap:8px;margin-top:12px;">
           <button class="btn btn-ghost btn-sm" onclick="saveFile('categories')">💾 保存分类到文件</button>
           <button class="btn btn-ghost btn-sm" onclick="loadFile('categories')">📂 从文件加载分类</button>
-          <button class="btn btn-ghost btn-sm" onclick="resetAllCategoryAssign()" style="color:#e53e3e;">🔄 重置全部分类</button>
         </div>
         <!-- 点击分类后：显示不属于该分类的字，带搜索过滤 -->
         <div id="categoryAddCharsArea" style="display:none;margin-top:12px;padding:12px;background:#f0f5ff;border-radius:10px;border:2px solid #667eea;">
@@ -530,6 +529,15 @@
       <div class="card-title">📖 字典</div>
       <div style="margin-bottom:12px;font-size:13px;color:#718096;">
         按拼音首字母浏览汉字，点击字母查看对应汉字及包含该字的词语
+      </div>
+      <!-- 分类过滤 -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:500;color:#4a5568;">📂 分类过滤</span>
+        <div id="dictCategoryFilter" style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span onclick="setDictCategoryFilter('')"
+            style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;cursor:pointer;font-size:12px;transition:all 0.15s;user-select:none;
+                   border:2px solid #667eea;background:#ebf4ff;color:#667eea;font-weight:600;">全部</span>
+        </div>
       </div>
       <!-- 字母导航 -->
       <div id="dictLetterBar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;padding:8px 0;border-bottom:2px solid #e2e8f0;">
@@ -2129,9 +2137,23 @@ function refreshHistory() {
 //  DICT — 字典浏览（按拼音首字母分组）
 // ============================================================
 let _dictActiveLetter = 'A';
+let _dictCategoryFilter = ''; // 选中的分类ID，空表示全部
+
+function setDictCategoryFilter(catId) {
+  _dictCategoryFilter = catId;
+  _dictActiveLetter = 'A';
+  renderDict();
+}
 
 function renderDict() {
-  const entries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+  // 渲染分类过滤栏
+  renderDictCategoryFilter();
+
+  let entries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+  // 按分类过滤
+  if (_dictCategoryFilter) {
+    entries = entries.filter(([ch, info]) => info.categoryId === _dictCategoryFilter);
+  }
   if (entries.length === 0) {
     document.getElementById('dictCharList').innerHTML = '<p class="empty-msg">暂无字库，请先在字词管理中导入汉字</p>';
     return;
@@ -2269,6 +2291,30 @@ function toggleShowAllAddChars() {
     const catName = getCategoryNameById(appData.categories || [], _activeAddCatId) || '';
     showAddCharsToCategory(_activeAddCatId, catName);
   }
+}
+
+// 渲染字典分类过滤栏
+function renderDictCategoryFilter() {
+  const container = document.getElementById('dictCategoryFilter');
+  if (!container) return;
+  const flat = getAllCategoriesFlat(appData.categories || []);
+  let html = `<span onclick="setDictCategoryFilter('')"
+    style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;cursor:pointer;font-size:12px;transition:all 0.15s;user-select:none;
+           border:2px solid ${!_dictCategoryFilter ? '#667eea' : '#e2e8f0'};
+           background:${!_dictCategoryFilter ? '#ebf4ff' : '#fff'};
+           color:${!_dictCategoryFilter ? '#667eea' : '#718096'};
+           font-weight:${!_dictCategoryFilter ? '600' : '400'};">全部 (${Object.keys(appData.dict).length})</span>`;
+  flat.forEach(c => {
+    const count = Object.values(appData.dict).filter(d => d.categoryId === c.id).length;
+    const isActive = _dictCategoryFilter === c.id;
+    html += `<span onclick="setDictCategoryFilter('${c.id}')"
+      style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;cursor:pointer;font-size:12px;transition:all 0.15s;user-select:none;
+             border:2px solid ${isActive ? '#667eea' : '#e2e8f0'};
+             background:${isActive ? '#ebf4ff' : '#fff'};
+             color:${isActive ? '#667eea' : '#718096'};
+             font-weight:${isActive ? '600' : '400'};">${c.name} (${count})</span>`;
+  });
+  container.innerHTML = html;
 }
 
 // 编辑字的拼音
