@@ -21,3 +21,5 @@ Thumbs.db
 
 # Jieba cache
 jieba.cache
+
+*.ps1
