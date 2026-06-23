@@ -12,6 +12,7 @@
 
 import os
 import sys
+import json
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from pinyin_service import PinyinService
@@ -187,6 +188,61 @@ def create_app() -> Flask:
     @app.route('/<path:filename>')
     def serve_static(filename):
         return send_from_directory(_project_root, filename)
+
+    # ──────────────────────────────────────────────
+    #  JSON 数据文件持久化 — 按类型分文件存储
+    # ──────────────────────────────────────────────
+    DATA_DIR = os.path.join(_project_root, 'data')
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+    DATA_FILES = {
+        'dict': os.path.join(DATA_DIR, 'dict.json'),
+        'words': os.path.join(DATA_DIR, 'words.json'),
+        'categories': os.path.join(DATA_DIR, 'categories.json'),
+        'students': os.path.join(DATA_DIR, 'students.json'),
+    }
+
+    def _data_file_path(data_type):
+        path = DATA_FILES.get(data_type)
+        if path is None:
+            raise ValueError(f'未知数据类型: {data_type}')
+        return path
+
+    @app.route('/api/data/load/<data_type>', methods=['GET'])
+    def api_data_load(data_type):
+        """加载指定类型的 JSON 数据文件"""
+        try:
+            path = _data_file_path(data_type)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
+
+        if not os.path.exists(path):
+            return jsonify({'data': None, 'message': f'{data_type}.json 不存在'})
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return jsonify({'data': data, 'message': 'ok', 'type': data_type})
+        except Exception as e:
+            return jsonify({'error': f'读取失败: {str(e)}'}), 500
+
+    @app.route('/api/data/save/<data_type>', methods=['POST'])
+    def api_data_save(data_type):
+        """保存指定类型的 JSON 数据文件"""
+        try:
+            path = _data_file_path(data_type)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
+
+        body = request.get_json(silent=True) or {}
+        data = body.get('data')
+        if data is None:
+            return jsonify({'error': '缺少 data 字段'}), 400
+        try:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            return jsonify({'message': f'{data_type}.json 保存成功', 'path': path})
+        except Exception as e:
+            return jsonify({'error': f'保存失败: {str(e)}'}), 500
 
     _APP = app
     return app

@@ -1,0 +1,60 @@
+[
+  {
+    "id": 0,
+    "chars": [
+      "冬",
+      "天"
+    ],
+    "pinyin": "dōng tīan"
+  },
+  {
+    "id": 1,
+    "chars": [
+      "春",
+      "天"
+    ],
+    "pinyin": "chūn tīan"
+  },
+  {
+    "id": 4,
+    "chars": [
+      "秋",
+      "天"
+    ],
+    "pinyin": "qīu tīan"
+  },
+  {
+    "id": 5,
+    "chars": [
+      "夏",
+      "天"
+    ],
+    "pinyin": "xià tīan"
+  },
+  {
+    "id": 6,
+    "chars": [
+      "春",
+      "夏",
+      "秋",
+      "冬"
+    ],
+    "pinyin": "chūn xià qīu dōng"
+  },
+  {
+    "id": 7,
+    "chars": [
+      "春",
+      "夏"
+    ],
+    "pinyin": "chūn xià"
+  },
+  {
+    "id": 8,
+    "chars": [
+      "快",
+      "走"
+    ],
+    "pinyin": "kùai zǒu"
+  }
+]

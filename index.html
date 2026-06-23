@@ -114,6 +114,8 @@
   }
   .tag .remove:hover { color: #f56565; }
 
+  .lib-panel { display: none; }
+  .lib-panel.active { display: block; }
   .word-check-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 12px; }
   .word-check-item {
     display: flex; align-items: center; gap: 8px;
@@ -218,31 +220,80 @@
   .pinyin-option-btn:hover { background: #ebf4ff; }
   .pinyin-option-btn.selected { background: #667eea; color: #fff; }
 
-  /* ========== Print Styles ========== */
+  /* ========== Print Styles — 田字格 ========== */
   .print-area { display: none; }
+
+  /* ===== 田字格核心样式 — 屏幕预览和打印共用 ===== */
+  .tzg-word {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 2mm;
+  }
+  .tzg-char {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5mm;
+  }
+  .tzg-char .pinyin-label {
+    font-size: 10pt; font-weight: 600; color: #1a202c;
+    letter-spacing: 0.5px; line-height: 1.3;
+  }
+  .tzg-box {
+    display: inline-block;
+    width: 18mm; height: 18mm;
+    border: 1.5px solid #333;
+    position: relative;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  /* 田字格十字虚线 — 更清晰 */
+  .tzg-box::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    border-top: 1.5px dashed #666;
+    pointer-events: none;
+  }
+  .tzg-box::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 0; bottom: 0;
+    border-left: 1.5px dashed #666;
+    pointer-events: none;
+  }
+
   @media print {
     body { background: #fff; }
     .header, .tab-nav, .main, .toast-container, .modal-overlay { display: none !important; }
     .print-area { display: block !important; }
-    @page { size: A4 portrait; margin: 15mm; }
+    @page { size: A4 portrait; margin: 12mm 14mm; }
     .print-page {
       width: 100%; page-break-after: always;
       font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
     }
     .print-page:last-child { page-break-after: auto; }
-    .print-title { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-    .print-subtitle { text-align: right; font-size: 14px; color: #666; margin-bottom: 16px; }
-    .print-table { width: 100%; border-collapse: collapse; }
-    .print-table td {
-      width: 20%; height: 48px; padding: 6px 8px;
-      border: 1px solid #333; text-align: center; vertical-align: bottom;
-      font-size: 16px;
+    .print-title { text-align: center; font-size: 22pt; font-weight: 700; margin-bottom: 6mm; letter-spacing: 6px; }
+    .print-student-info { text-align: right; font-size: 12pt; color: #555; margin-bottom: 8mm; }
+
+    /* 田字格 Grid 布局 — 5列×5行，词之间有空隙 */
+    .print-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5mm 4mm;
+      justify-items: center;
+      align-items: center;
     }
-    .print-table td .pinyin {
-      display: block; font-size: 16px; font-weight: 500; margin-bottom: 4px;
+    .print-grid-item {
+      text-align: center;
     }
-    .print-table td .underline {
-      display: block; border-bottom: 1.5px solid #333; width: 80%; margin: 0 auto; height: 24px;
+
+    /* 打印时田字格略放大 */
+    .tzg-box {
+      width: 19mm; height: 19mm;
+      border-width: 1.5px;
+    }
+    .tzg-char .pinyin-label {
+      font-size: 11pt;
+    }
+    .tzg-word {
+      gap: 2.5mm;
     }
   }
 </style>
@@ -256,6 +307,11 @@
     <label for="studentSelect">👤 学生</label>
     <select id="studentSelect"></select>
     <button class="btn-student-add" onclick="showAddStudentModal()">➕ 添加</button>
+    <span id="backendStatus" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,0.15);">
+      <span class="status-dot" style="width:8px;height:8px;border-radius:50%;background:#aaa;display:inline-block;"></span>
+      <span class="status-text">后端...</span>
+    </span>
+    <span class="btn-student-add" onclick="saveFile('students')" title="保存学生数据到JSON文件" style="cursor:pointer;font-size:12px;">💾 保存学生</span>
   </div>
 </header>
 
@@ -263,6 +319,7 @@
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="practice" onclick="switchTab('practice')">📝 出题</button>
   <button class="tab-btn" data-tab="library" onclick="switchTab('library')">📚 字库管理</button>
+  <button class="tab-btn" data-tab="history" onclick="switchTab('history')">📊 历史记录</button>
 </nav>
 
 <!-- ==================== Main Content ==================== -->
@@ -272,6 +329,23 @@
   <div class="panel active" id="panel-practice">
     <div class="card">
       <div class="card-title">📝 今日练习</div>
+      <!-- 词语数量设置 -->
+      <div class="form-row" style="margin-bottom:8px; gap:8px;">
+        <label for="wordCountInput" style="font-size:13px;">📊 题目数量</label>
+        <input type="number" id="wordCountInput" class="count-input" value="50" min="1" max="200" style="width:70px;">
+        <span style="font-size:12px; color:#a0aec0;">（最多不超过词库总数）</span>
+      </div>
+      <!-- 分类筛选 -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="font-size:13px;font-weight:500;color:#4a5568;">📂 按分类筛选</span>
+          <span style="font-size:12px;color:#a0aec0;">（不选则全部出题）</span>
+          <button class="btn btn-ghost btn-sm" onclick="clearCategoryFilter()" style="font-size:11px;">清除筛选</button>
+        </div>
+        <div id="categoryFilterList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:26px;">
+          <span style="font-size:13px;color:#a0aec0;">暂无分类</span>
+        </div>
+      </div>
       <div id="practiceStatus">
         <p class="empty-msg">暂无练习数据。请先在「字库管理」中添加字和词语。</p>
       </div>
@@ -283,7 +357,7 @@
           <hr style="border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0;">
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
             <span style="font-size:18px; font-weight:600;">✏️ 批改</span>
-            <span style="font-size:13px; color:#718096;">逐词标记对错，然后提交</span>
+            <span style="font-size:13px; color:#718096;">仅标记写错的字（默认全对），点击字切换错误标记</span>
           </div>
           <div class="correct-list" id="correctList"></div>
           <div style="margin-top:16px;">
@@ -296,76 +370,173 @@
 
   <!-- ===== Library Panel ===== -->
   <div class="panel" id="panel-library">
-    <!-- Add Character -->
-    <div class="card">
-      <div class="card-title">🔤 添加单字</div>
-      <div class="form-row">
-        <label>字</label>
-        <input type="text" class="char-input" id="charInput" maxlength="2" placeholder="如: 春" autocomplete="off">
-        <label>拼音</label>
-        <input type="text" class="pinyin-input" id="pinyinInput" placeholder="自动识别或手动输入" autocomplete="off">
-        <button class="btn btn-primary" onclick="addChar()">➕ 添加</button>
-      </div>
-      <div class="pinyin-detect-status" id="pinyinDetectStatus"></div>
-      <div style="font-size:13px; color:#718096;">
-        💡 输入汉字后自动识别拼音，多音字可点选；也支持手动输入
-      </div>
+    <!-- 子Tab导航 -->
+    <div style="display:flex;gap:0;margin-bottom:16px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+      <button class="lib-tab-btn active" data-libtab="cat" onclick="switchLibTab('cat')" style="flex:1;padding:10px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s;color:#667eea;border-bottom:3px solid #667eea;">📂 分类管理</button>
+      <button class="lib-tab-btn" data-libtab="chars" onclick="switchLibTab('chars')" style="flex:1;padding:10px;border:none;background:transparent;cursor:pointer;font-size:14px;font-weight:500;transition:all 0.2s;color:#718096;border-bottom:3px solid transparent;">🔤 字词管理</button>
     </div>
 
-    <!-- Compose Words -->
-    <div class="card">
-      <div class="card-title">🔗 组词</div>
-
-      <!-- Method A: Auto-compose -->
-      <div style="margin-bottom:16px;">
-        <h4 style="font-size:14px; color:#4a5568; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-          <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#667eea; color:#fff; font-size:12px; font-weight:700;">A</span>
-          选字自动组合
-        </h4>
-        <p style="font-size:14px; color:#718096; margin-bottom:10px;">
-          选择一个字，自动列出正确的两字词语（选中字在前）。已存在的词不显示。如需其他组合，请用下方的「手动输入」。
-        </p>
-        <div class="form-row">
-          <label>选字</label>
-          <select id="composeCharSelect" style="padding:8px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:15px;">
-            <option value="">— 请先添加字 —</option>
+    <!-- ===== 分类管理 Tab ===== -->
+    <div class="lib-panel active" id="libpanel-cat">
+      <!-- 创建分类 -->
+      <div class="card">
+        <div class="card-title">📂 创建分类</div>
+        <div style="font-size:13px; color:#718096; margin-bottom:10px;">
+          创建层级分类，如：年级 → 学期 → 单元 → 课
+        </div>
+        <div class="form-row" style="margin-bottom:10px;">
+          <label>上级分类</label>
+          <select id="categoryParentSelect" style="padding:8px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;">
+            <option value="">— 根目录 —</option>
           </select>
+          <label>分类名称</label>
+          <input type="text" id="categoryNameInput" placeholder="如: 一年级" style="width:100px;font-size:14px;" autocomplete="off">
+          <button class="btn btn-success btn-sm" onclick="addCategory()">➕ 添加</button>
         </div>
-        <div id="composeResults">
-          <p class="empty-msg">选择一个字后显示可组成的词语。</p>
+        <div id="categoryTree" style="font-size:14px; min-height:20px;">
+          <p class="empty-msg">暂无分类</p>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="saveFile('categories')">💾 保存分类到文件</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadFile('categories')">📂 从文件加载分类</button>
         </div>
       </div>
-
-      <!-- Method B: Manual input -->
-      <div>
-        <h4 style="font-size:14px; color:#4a5568; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-          <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#48bb78; color:#fff; font-size:12px; font-weight:700;">B</span>
-          手动输入词语
-        </h4>
-        <p style="font-size:14px; color:#718096; margin-bottom:10px;">
-          用已有字自由组合成词语（如「好天」），拼音自动拼接。输入后按回车或点添加。
-        </p>
-        <div class="form-row">
-          <label>词语</label>
-          <input type="text" id="manualWordInput" placeholder="如: 好天" style="width:120px; font-size:18px; text-align:center;" autocomplete="off">
-          <button class="btn btn-success btn-sm" onclick="addManualWord()">➕ 添加词语</button>
+      <!-- 字分类操作 -->
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span>🔤 字分类</span>
+          <span style="font-size:12px;color:#a0aec0;font-weight:400;">勾选字后点击分类名称，或拖拽字到分类上</span>
         </div>
-        <div id="manualWordStatus" style="font-size:13px; min-height:22px;"></div>
+        <div id="catAssignArea" style="display:flex;flex-direction:column;gap:12px;">
+          <!-- 分类列表(作为拖拽目标) -->
+          <div id="catDropZone" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;padding:10px;background:#f7fafc;border-radius:10px;border:2px dashed #e2e8f0;">
+            <span style="font-size:13px;color:#a0aec0;width:100%;">暂无分类，请先在上方创建</span>
+          </div>
+          <!-- 字列表(可勾选+拖拽) -->
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+              <span style="font-size:13px;font-weight:500;color:#4a5568;">字列表</span>
+              <button class="btn btn-ghost btn-sm" onclick="toggleAllCharSelect()">全选/取消</button>
+              <span id="selectedCharCount" style="font-size:12px;color:#a0aec0;">已选 0 个</span>
+            </div>
+            <div id="catCharList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;padding:8px;background:#f7fafc;border-radius:10px;border:1px solid #e2e8f0;">
+              <p class="empty-msg" style="padding:0;font-size:13px;">暂无字</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Current Data -->
+    <!-- ===== 字词管理 Tab ===== -->
+    <div class="lib-panel" id="libpanel-chars">
+      <!-- Add Character -->
+      <div class="card">
+        <div class="card-title">🔤 添加单字</div>
+        <div class="form-row">
+          <label>字</label>
+          <input type="text" class="char-input" id="charInput" maxlength="2" placeholder="如: 春" autocomplete="off">
+          <label>拼音</label>
+          <input type="text" class="pinyin-input" id="pinyinInput" placeholder="自动识别或手动输入" autocomplete="off">
+          <label>分类</label>
+          <select id="charCategorySelect" style="padding:8px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;">
+            <option value="">— 无分类 —</option>
+          </select>
+          <button class="btn btn-primary" onclick="addChar()">➕ 添加</button>
+        </div>
+        <div class="pinyin-detect-status" id="pinyinDetectStatus"></div>
+        <div style="font-size:13px; color:#718096;">💡 输入汉字后自动识别拼音，多音字可点选；也支持手动输入。分类可选。</div>
+      </div>
+
+      <!-- Compose Words -->
+      <div class="card">
+        <div class="card-title">🔗 组词</div>
+        <div style="margin-bottom:16px;">
+          <h4 style="font-size:14px; color:#4a5568; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#667eea; color:#fff; font-size:12px; font-weight:700;">A</span>选字自动组合</h4>
+          <p style="font-size:14px; color:#718096; margin-bottom:10px;">选择一个字，自动列出正确的两字词语。已存在的词不显示。</p>
+          <div class="form-row"><label>选字</label>
+            <select id="composeCharSelect" style="padding:8px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;"><option value="">— 请先添加字 —</option></select>
+          </div>
+          <div id="composeResults"><p class="empty-msg">选择一个字后显示可组成的词语。</p></div>
+        </div>
+        <div>
+          <h4 style="font-size:14px; color:#4a5568; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#48bb78; color:#fff; font-size:12px; font-weight:700;">B</span>手动输入词语</h4>
+          <div class="form-row">
+            <label>词语</label>
+            <input type="text" id="manualWordInput" placeholder="如: 好天" style="width:120px;font-size:18px;text-align:center;" autocomplete="off">
+            <button class="btn btn-success btn-sm" onclick="addManualWord()">➕ 添加</button>
+          </div>
+          <div id="manualWordStatus" style="font-size:13px;min-height:22px;"></div>
+        </div>
+      </div>
+
+      <!-- Batch Import -->
+      <div class="card">
+        <div class="card-title">📦 批量导入</div>
+        <div style="font-size:13px;color:#718096;margin-bottom:10px;">批量添加字或词语，用逗号、空格或换行分隔。缺字自动补全。</div>
+        <div class="form-row" style="gap:8px;margin-bottom:10px;">
+          <label style="font-size:13px;font-weight:400;"><input type="radio" name="batchMode" value="chars" checked onchange="toggleBatchMode()">批量添加字</label>
+          <label style="font-size:13px;font-weight:400;"><input type="radio" name="batchMode" value="words" onchange="toggleBatchMode()">批量添加词语</label>
+          <label style="font-size:13px;font-weight:400;"><input type="radio" name="batchMode" value="mixed" onchange="toggleBatchMode()">智能识别</label>
+          <span style="font-size:12px;color:#a0aec0;">（2字及以上视为词）</span>
+        </div>
+        <textarea id="batchInput" placeholder="例如：春天, 花开, 大山" style="width:100%;min-height:70px;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:inherit;resize:vertical;outline:none;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="batchImport()">🚀 批量导入</button>
+          <span id="batchImportStatus" style="font-size:13px;color:#a0aec0;"></span>
+        </div>
+      </div>
+
+      <!-- Current Data -->
+      <div class="card">
+        <div class="card-title">📋 当前字库与词库</div>
+        <div class="two-col">
+          <div>
+            <h4 style="font-size:14px;color:#4a5568;margin-bottom:8px;">字库（共 <span id="charCount">0</span> 个）</h4>
+            <div id="charList"><p class="empty-msg">暂无字</p></div>
+            <div style="display:flex;gap:6px;margin-top:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="saveFile('dict')">💾 保存字库</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadFile('dict')">📂 加载字库</button>
+            </div>
+          </div>
+          <div>
+            <h4 style="font-size:14px;color:#4a5568;margin-bottom:8px;">词库（共 <span id="wordCount">0</span> 个）</h4>
+            <div id="wordList"><p class="empty-msg">暂无词</p></div>
+            <div style="display:flex;gap:6px;margin-top:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="saveFile('words')">💾 保存词库</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadFile('words')">📂 加载词库</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== History Panel ===== -->
+  <div class="panel" id="panel-history">
+    <!-- 学生选择 + 统计概览 -->
     <div class="card">
-      <div class="card-title">📋 当前字库与词库</div>
-      <div class="two-col">
-        <div>
-          <h4 style="font-size:14px; color:#4a5568; margin-bottom:8px;">字库（共 <span id="charCount">0</span> 个）</h4>
-          <div id="charList"><p class="empty-msg">暂无字</p></div>
-        </div>
-        <div>
-          <h4 style="font-size:14px; color:#4a5568; margin-bottom:8px;">词库（共 <span id="wordCount">0</span> 个）</h4>
-          <div id="wordList"><p class="empty-msg">暂无词</p></div>
-        </div>
+      <div class="card-title">📊 历史记录</div>
+      <div id="historySummary" style="font-size:14px;color:#718096;margin-bottom:12px;">
+        选择一个学生查看历史练习统计。
+      </div>
+      <div id="historyStats" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;"></div>
+    </div>
+
+    <!-- 历史练习列表 -->
+    <div class="card">
+      <div class="card-title">📋 历史练习</div>
+      <div id="historyList">
+        <p class="empty-msg">暂无历史记录</p>
+      </div>
+    </div>
+
+    <!-- 错字排行 -->
+    <div class="card">
+      <div class="card-title">🔴 常错字排行</div>
+      <div id="errorCharRanking">
+        <p class="empty-msg">暂无错字记录</p>
       </div>
     </div>
   </div>
@@ -377,6 +548,34 @@
 
 <!-- ==================== Toast Container ==================== -->
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== Confirm Modal ==================== -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:360px;">
+    <h3>⚠️ 确认操作</h3>
+    <p id="confirmMsg" style="font-size:15px;color:#4a5568;margin:12px 0;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="confirmNo()">取消</button>
+      <button class="btn btn-danger" onclick="confirmYes()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Edit Char Category Modal ==================== -->
+<div class="modal-overlay" id="editCharCatModal">
+  <div class="modal">
+    <h3 id="editCharCatLabel">📂 修改字分类</h3>
+    <input type="hidden" id="editCharCatChar">
+    <div class="form-row">
+      <label>新分类</label>
+      <select id="editCharCatSelect" style="flex:1;padding:8px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('editCharCatModal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="confirmEditCharCategory()">确定</button>
+    </div>
+  </div>
+</div>
 
 <!-- ==================== Add Student Modal ==================== -->
 <div class="modal-overlay" id="addStudentModal">
@@ -401,7 +600,7 @@
 const STORAGE_KEY = 'kanpinyin_data';
 
 function getDefaultData() {
-  return { dict: {}, words: [], students: [] };
+  return { categories: [], dict: {}, words: [], students: [] };
 }
 
 function loadData() {
@@ -410,6 +609,7 @@ function loadData() {
     if (raw) {
       const data = JSON.parse(raw);
       // ensure structure
+      if (!data.categories) data.categories = [];
       if (!data.dict) data.dict = {};
       if (!data.words) data.words = [];
       if (!data.students) data.students = [];
@@ -448,6 +648,83 @@ function ensureStudent() {
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+// ============================================================
+//  JSON 数据文件持久化 — 按类型分文件存储（通过后端 API）
+// ============================================================
+const DATA_API = 'http://localhost:5001/api/data';
+
+const DATA_FILE_NAMES = {
+  dict: '字库',
+  words: '词库',
+  categories: '分类',
+  students: '学生数据',
+};
+
+async function saveFile(dataType) {
+  const label = DATA_FILE_NAMES[dataType] || dataType;
+  try {
+    let payload;
+    if (dataType === 'dict') payload = appData.dict;
+    else if (dataType === 'words') payload = appData.words;
+    else if (dataType === 'categories') payload = appData.categories;
+    else if (dataType === 'students') payload = appData.students;
+    else throw new Error('未知类型');
+
+    const resp = await fetch(`${DATA_API}/save/${dataType}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: payload })
+    });
+    const result = await resp.json();
+    if (resp.ok) {
+      toast(`💾 ${label} 已保存`);
+    } else {
+      toast(`保存${label}失败: ${result.error}`, 'error');
+    }
+  } catch (e) {
+    toast(`保存${label}失败: ${e.message}`, 'error');
+  }
+}
+
+async function loadFile(dataType) {
+  const label = DATA_FILE_NAMES[dataType] || dataType;
+  try {
+    const resp = await fetch(`${DATA_API}/load/${dataType}`);
+    const result = await resp.json();
+    if (resp.ok && result.data !== null && result.data !== undefined) {
+      const loaded = result.data;
+      if (dataType === 'dict') {
+        // 合并字库（保留已有，覆盖相同字的不同拼音）
+        Object.assign(appData.dict, loaded);
+      } else if (dataType === 'words') {
+        // 合并词库（保留已有ID不重复）
+        const existingIds = new Set(appData.words.map(w => w.id));
+        loaded.forEach(w => {
+          if (!existingIds.has(w.id)) {
+            appData.words.push(w);
+            existingIds.add(w.id);
+          }
+        });
+      } else if (dataType === 'categories') {
+        appData.categories = loaded;
+      } else if (dataType === 'students') {
+        // 合并学生（保留现有学生，添加新学生）
+        loaded.forEach(ls => {
+          const existing = appData.students.find(s => s.id === ls.id);
+          if (!existing) appData.students.push(ls);
+        });
+      }
+      saveData(appData);
+      toast(`📂 ${label} 已加载`);
+      refreshAll();
+    } else {
+      toast(`加载${label}失败: ${result.message || '文件不存在'}`, 'info');
+    }
+  } catch (e) {
+    toast(`加载${label}失败: 后端未连接`, 'error');
+  }
 }
 
 // ============================================================
@@ -521,6 +798,7 @@ function switchTab(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
   if (name === 'library') refreshLibrary();
   if (name === 'practice') refreshPractice();
+  if (name === 'history') refreshHistory();
 }
 
 // ============================================================
@@ -623,7 +901,9 @@ function addChar() {
   if (!ch) { toast('请输入字', 'error'); return; }
   if (!py) { toast('请输入拼音', 'error'); return; }
   if (appData.dict[ch]) { toast(`字「${ch}」已存在`, 'error'); return; }
-  appData.dict[ch] = { pinyin: py };
+  const catSel = document.getElementById('charCategorySelect');
+  const categoryId = catSel ? catSel.value : '';
+  appData.dict[ch] = { pinyin: py, categoryId: categoryId || undefined };
   saveData(appData);
   charInput.value = '';
   pinyinInput.value = '';
@@ -792,44 +1072,79 @@ async function onComposeCharChange() {
 // ============================================================
 //  MANUAL WORD INPUT
 // ============================================================
-function addManualWord() {
+async function addManualWord() {
   const input = document.getElementById('manualWordInput');
   const statusEl = document.getElementById('manualWordStatus');
   const raw = input.value.trim();
   if (!raw) { statusEl.innerHTML = '<span style="color:#fc8181;">请输入词语</span>'; return; }
 
   const chars = [...raw];
-  // Validate all chars exist in dict
-  const missing = chars.filter(ch => !appData.dict[ch]);
-  if (missing.length > 0) {
-    statusEl.innerHTML = `<span style="color:#fc8181;">以下字不在字库中：${missing.join('、')}，请先添加</span>`;
-    return;
-  }
 
-  // Check if word already exists
+  // 检查是否已存在
   const existing = new Set(appData.words.map(w => w.chars.join('')));
   if (existing.has(raw)) {
     statusEl.innerHTML = `<span style="color:#ed8936;">⚠️ 「${raw}」已存在于词库中</span>`;
     return;
   }
 
-  // Compute pinyin by concatenating each char's pinyin
-  const pyParts = chars.map(ch => appData.dict[ch].pinyin);
+  // 自动补全字库中没有的字
+  const missing = chars.filter(ch => !appData.dict[ch]);
+  let autoAddedChars = [];
+
+  if (missing.length > 0) {
+    statusEl.innerHTML = `<span class="spinner"></span> 正在自动识别缺字拼音...`;
+    // 逐个查缺字的拼音
+    for (const ch of missing) {
+      try {
+        const resp = await fetch(`${PINYIN_API}?char=${encodeURIComponent(ch)}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          const py = (data.pinyins || [])[0];
+          if (py) {
+            appData.dict[ch] = { pinyin: py, categoryId: undefined };
+            autoAddedChars.push(`${ch}(${py})`);
+          } else {
+            // 后端无结果，用占位
+            appData.dict[ch] = { pinyin: '?', categoryId: undefined };
+            autoAddedChars.push(`${ch}(?)`);
+          }
+        } else {
+          appData.dict[ch] = { pinyin: '?', categoryId: undefined };
+          autoAddedChars.push(`${ch}(?)`);
+        }
+      } catch (e) {
+        // 后端不可用，用占位拼音
+        appData.dict[ch] = { pinyin: ch, categoryId: undefined };
+        autoAddedChars.push(`${ch}(${ch})`);
+      }
+    }
+  }
+
+  // 再次检查所有字是否都有拼音（刚才自动补全的）
+  const pyParts = chars.map(ch => {
+    const info = appData.dict[ch];
+    return info ? info.pinyin : '?';
+  });
   const pinyin = pyParts.join(' ');
 
-  // Add word
+  // 添加词
   const id = appData.words.length > 0 ? Math.max(...appData.words.map(w => w.id)) + 1 : 0;
   appData.words.push({ id, chars, pinyin });
   saveData(appData);
   input.value = '';
-  statusEl.innerHTML = `<span style="color:#48bb78;">✅ 已添加「${raw}」(${pinyin})</span>`;
+
+  let msg = `✅ 已添加「${raw}」(${pinyin})`;
+  if (autoAddedChars.length > 0) {
+    msg += `，并自动补全缺字：${autoAddedChars.join('、')}`;
+  }
+  statusEl.innerHTML = `<span style="color:#48bb78;">${msg}</span>`;
   toast(`已添加词语「${raw}」`);
   refreshLibrary();
-  // Clear status after 3s
+  // Clear status after 5s
   setTimeout(() => {
     const s = document.getElementById('manualWordStatus');
     if (s) s.innerHTML = '';
-  }, 3000);
+  }, 5000);
 }
 
 function toggleWordCheck(idx) {
@@ -845,26 +1160,544 @@ function confirmWords() {
   const checked = document.querySelectorAll('.word-check-item.checked');
   if (checked.length === 0) { toast('请勾选至少一个词语', 'error'); return; }
   const candidates = window._wordCandidates || [];
+  const existingSet = new Set(appData.words.map(w => w.chars.join('')));
   const added = [];
+  const skipped = [];
   checked.forEach(el => {
     const idx = parseInt(el.dataset.idx);
     const c = candidates[idx];
-    if (c) {
-      const id = appData.words.length > 0 ? Math.max(...appData.words.map(w => w.id)) + 1 : 0;
-      appData.words.push({ id, chars: c.chars, pinyin: c.pinyin });
-      added.push(c.display);
+    if (!c) return;
+    // 去重检查
+    if (existingSet.has(c.display)) {
+      skipped.push(c.display);
+      return;
     }
+    const id = appData.words.length > 0 ? Math.max(...appData.words.map(w => w.id)) + 1 : 0;
+    appData.words.push({ id, chars: c.chars, pinyin: c.pinyin });
+    existingSet.add(c.display);
+    added.push(c.display);
   });
   saveData(appData);
-  toast(`已确认添加 ${added.length} 个词语：${added.join('、')}`);
+  let msg = '';
+  if (added.length > 0) msg += `已添加 ${added.length} 个：${added.join('、')}`;
+  if (skipped.length > 0) msg += (msg ? '；' : '') + `${skipped.length} 个已存在跳过：${skipped.join('、')}`;
+  if (added.length > 0) {
+    toast(msg);
+  } else {
+    toast('没有新词语可添加（全部已存在）', 'info');
+  }
   refreshLibrary();
+}
+
+// ============================================================
+//  BATCH IMPORT — 批量添加字/词语
+// ============================================================
+function toggleBatchMode() {
+  const el = document.getElementById('batchInput');
+  const mode = document.querySelector('input[name="batchMode"]:checked')?.value;
+  if (mode === 'chars') el.placeholder = '例如：春 天 花 开（用逗号、空格或换行分隔）';
+  else if (mode === 'words') el.placeholder = '例如：春天, 花开, 大山（用逗号或换行分隔）';
+  else el.placeholder = '例如：春, 春天, 花开（2字及以上自动视为词语）';
+}
+
+async function batchImport() {
+  const text = document.getElementById('batchInput').value.trim();
+  if (!text) { toast('请输入要导入的内容', 'error'); return; }
+  
+  const mode = document.querySelector('input[name="batchMode"]:checked')?.value || 'chars';
+  const statusEl = document.getElementById('batchImportStatus');
+  statusEl.innerHTML = '<span class="spinner"></span> 正在导入...';
+
+  // 按逗号、中文逗号、空格、换行分割
+  const rawItems = text.split(/[,，、\s\n]+/).filter(s => s.trim());
+  
+  let addedChars = [];
+  let addedWords = [];
+  let skippedChars = [];
+  let skippedWords = [];
+
+  for (const item of rawItems) {
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    
+    const chars = [...trimmed];
+    let isWord = false;
+    
+    if (mode === 'words') isWord = true;
+    else if (mode === 'mixed') isWord = chars.length >= 2;
+    // mode === 'chars' 时，isWord = false
+
+    if (isWord) {
+      // === 处理词语 ===
+      // 检查词是否已存在
+      const existingWords = new Set(appData.words.map(w => w.chars.join('')));
+      if (existingWords.has(trimmed)) {
+        skippedWords.push(trimmed);
+        continue;
+      }
+
+      // 检查/补全缺字
+      let allExist = true;
+      for (const ch of chars) {
+        if (!appData.dict[ch]) {
+          allExist = false;
+          // 尝试自动识别拼音
+          try {
+            const resp = await fetch(`${PINYIN_API}?char=${encodeURIComponent(ch)}`);
+            if (resp.ok) {
+              const data = await resp.json();
+              const py = (data.pinyins || [])[0];
+              appData.dict[ch] = { pinyin: py || '?', categoryId: undefined };
+              addedChars.push(`${ch}(${py || '?'})`);
+            } else {
+              appData.dict[ch] = { pinyin: '?', categoryId: undefined };
+              addedChars.push(`${ch}(?)`);
+            }
+          } catch (e) {
+            appData.dict[ch] = { pinyin: ch, categoryId: undefined };
+            addedChars.push(`${ch}(${ch})`);
+          }
+        }
+      }
+
+      // 拼接拼音
+      const pyParts = chars.map(ch => appData.dict[ch]?.pinyin || '?');
+      const pinyin = pyParts.join(' ');
+      
+      const id = appData.words.length > 0 ? Math.max(...appData.words.map(w => w.id)) + 1 : 0;
+      appData.words.push({ id, chars, pinyin });
+      addedWords.push(trimmed);
+    } else {
+      // === 处理单字 ===
+      for (const ch of chars) {
+        if (appData.dict[ch]) {
+          skippedChars.push(ch);
+          continue;
+        }
+        // 自动识别拼音
+        try {
+          const resp = await fetch(`${PINYIN_API}?char=${encodeURIComponent(ch)}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            const py = (data.pinyins || [])[0];
+            appData.dict[ch] = { pinyin: py || '?', categoryId: undefined };
+            addedChars.push(`${ch}(${py || '?'})`);
+          } else {
+            appData.dict[ch] = { pinyin: '?', categoryId: undefined };
+            addedChars.push(`${ch}(?)`);
+          }
+        } catch (e) {
+          appData.dict[ch] = { pinyin: ch, categoryId: undefined };
+          addedChars.push(`${ch}(${ch})`);
+        }
+      }
+    }
+  }
+
+  saveData(appData);
+
+  // 构建状态消息
+  let parts = [];
+  if (addedChars.length > 0) parts.push(`添加 ${addedChars.length} 字：${addedChars.join('、')}`);
+  if (addedWords.length > 0) parts.push(`添加 ${addedWords.length} 词：${addedWords.join('、')}`);
+  if (skippedChars.length > 0) parts.push(`${skippedChars.length} 字已存在：${skippedChars.join('、')}`);
+  if (skippedWords.length > 0) parts.push(`${skippedWords.length} 词已存在：${skippedWords.join('、')}`);
+  
+  const msg = parts.join('；');
+  statusEl.innerHTML = `<span style="color:#48bb78;">${msg}</span>`;
+  document.getElementById('batchInput').value = '';
+  
+  if (addedChars.length > 0 || addedWords.length > 0) {
+    toast(msg.length > 60 ? `✅ 导入完成：${addedChars.length + addedWords.length} 项` : msg);
+    refreshLibrary();
+  } else if (skippedChars.length > 0 || skippedWords.length > 0) {
+    toast('全部已存在，无新增', 'info');
+  } else {
+    toast('没有可导入的内容', 'info');
+  }
+  
+  // 3秒后清除状态
+  setTimeout(() => { statusEl.innerHTML = ''; }, 5000);
+}
+
+// ============================================================
+//  CATEGORY MANAGEMENT — 自定义层级分类
+// ============================================================
+function genCategoryId() {
+  return 'cat_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+
+function getAllLeafCategories(nodes, parentPath) {
+  // 返回所有叶子分类（没有子节点的分类）的扁平列表
+  let result = [];
+  (nodes || []).forEach(n => {
+    const path = parentPath ? parentPath + ' / ' + n.name : n.name;
+    if (!n.children || n.children.length === 0) {
+      result.push({ id: n.id, name: path });
+    } else {
+      result = result.concat(getAllLeafCategories(n.children, path));
+    }
+  });
+  return result;
+}
+
+function getAllCategoriesFlat(nodes, parentPath) {
+  let result = [];
+  (nodes || []).forEach(n => {
+    const path = parentPath ? parentPath + ' / ' + n.name : n.name;
+    result.push({ id: n.id, name: path });
+    if (n.children && n.children.length > 0) {
+      result = result.concat(getAllCategoriesFlat(n.children, path));
+    }
+  });
+  return result;
+}
+
+function findCategoryNode(nodes, id) {
+  for (let n of nodes) {
+    if (n.id === id) return n;
+    if (n.children) {
+      const found = findCategoryNode(n.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function removeCategoryNode(nodes, id) {
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    if (nodes[i].id === id) {
+      nodes.splice(i, 1);
+      return true;
+    }
+    if (nodes[i].children && removeCategoryNode(nodes[i].children, id)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function addCategory() {
+  const nameInput = document.getElementById('categoryNameInput');
+  const parentSelect = document.getElementById('categoryParentSelect');
+  const name = nameInput.value.trim();
+  if (!name) { toast('请输入分类名称', 'error'); return; }
+
+  if (!appData.categories) appData.categories = [];
+  const parentId = parentSelect.value;
+
+  const newNode = { id: genCategoryId(), name, children: [] };
+
+  if (parentId) {
+    const parent = findCategoryNode(appData.categories, parentId);
+    if (parent) {
+      if (!parent.children) parent.children = [];
+      parent.children.push(newNode);
+    } else {
+      appData.categories.push(newNode);
+    }
+  } else {
+    appData.categories.push(newNode);
+  }
+
+  nameInput.value = '';
+  saveData(appData);
+  toast(`已添加分类「${name}」`);
+  refreshLibrary();
+  nameInput.focus();
+}
+
+function removeCategory(id) {
+  if (!confirm('确定删除此分类及所有子分类吗？（字和词不受影响）')) return;
+  removeCategoryNode(appData.categories, id);
+  // 清除字和词中的分类引用
+  Object.keys(appData.dict).forEach(ch => {
+    if (appData.dict[ch].categoryId === id) appData.dict[ch].categoryId = '';
+  });
+  appData.words.forEach(w => {
+    if (w.categoryId === id) w.categoryId = '';
+  });
+  saveData(appData);
+  toast('已删除分类');
+  refreshLibrary();
+}
+
+function getCategoryPath(nodes, id) {
+  for (let n of nodes) {
+    if (n.id === id) return n.name;
+    if (n.children) {
+      const sub = getCategoryPath(n.children, id);
+      if (sub) return n.name + ' / ' + sub;
+    }
+  }
+  return '';
+}
+
+function renderCategoryTreeHtml(nodes, depth) {
+  if (!nodes || nodes.length === 0) return '';
+  let html = '<ul style="list-style:none;padding-left:' + (depth * 18) + 'px;margin:2px 0;">';
+  nodes.forEach(n => {
+    const charCount = Object.values(appData.dict).filter(d => d.categoryId === n.id).length;
+    html += `<li style="padding:4px 6px;margin:2px 0;border-radius:6px;background:#f7fafc;display:flex;align-items:center;gap:6px;">
+      <span style="font-weight:600;">📁 ${n.name}</span>
+      <span style="font-size:12px;color:#a0aec0;">(${charCount}字)</span>
+      <span class="remove" onclick="removeCategory('${n.id}')" style="margin-left:auto;">×</span>
+    </li>`;
+    if (n.children && n.children.length > 0) {
+      html += renderCategoryTreeHtml(n.children, depth + 1);
+    }
+  });
+  html += '</ul>';
+  return html;
+}
+
+// 编辑已有字的分类
+function editCharCategory(ch) {
+  const info = appData.dict[ch];
+  if (!info) return;
+  const currentCatId = info.categoryId || '';
+
+  const flat = getAllCategoriesFlat(appData.categories || []);
+  let options = '<option value="">— 无分类 —</option>';
+  flat.forEach(c => {
+    const selected = c.id === currentCatId ? 'selected' : '';
+    options += `<option value="${c.id}" ${selected}>${c.name}</option>`;
+  });
+
+  // 用模态框选择分类
+  const modal = document.getElementById('editCharCatModal');
+  document.getElementById('editCharCatLabel').textContent = `修改「${ch}」的分类`;
+  document.getElementById('editCharCatSelect').innerHTML = options;
+  document.getElementById('editCharCatSelect').value = currentCatId;
+  document.getElementById('editCharCatChar').value = ch;
+  modal.classList.add('show');
+}
+
+function confirmEditCharCategory() {
+  const ch = document.getElementById('editCharCatChar').value;
+  const newCatId = document.getElementById('editCharCatSelect').value;
+  const info = appData.dict[ch];
+  if (info) {
+    info.categoryId = newCatId || undefined;
+    saveData(appData);
+    toast(`已更新「${ch}」的分类`);
+    refreshLibrary();
+  }
+  document.getElementById('editCharCatModal').classList.remove('show');
+}
+
+function updateCategorySelects() {
+  const flat = getAllCategoriesFlat(appData.categories || []);
+  ['categoryParentSelect', 'charCategorySelect'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">— ' + (selId === 'categoryParentSelect' ? '根目录' : '无分类') + ' —</option>';
+    flat.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+    if (currentVal && flat.some(c => c.id === currentVal)) {
+      sel.value = currentVal;
+    }
+  });
+}
+
+// 出题面板分类筛选
+function renderCategoryFilter() {
+  const container = document.getElementById('categoryFilterList');
+  if (!container) return;
+  const flat = getAllCategoriesFlat(appData.categories || []);
+  if (flat.length === 0) {
+    container.innerHTML = '<span style="font-size:13px;color:#a0aec0;">暂无分类</span>';
+    return;
+  }
+  let html = '';
+  flat.forEach(c => {
+    const selected = _selectedCategoryIds.includes(c.id);
+    html += `<span onclick="toggleCategoryFilter('${c.id}')"
+      style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;
+             border-radius:16px;cursor:pointer;font-size:13px;transition:all 0.15s;
+             border:2px solid ${selected ? '#667eea' : '#e2e8f0'};
+             background:${selected ? '#ebf4ff' : '#fff'};
+             color:${selected ? '#667eea' : '#718096'};
+             font-weight:${selected ? '600' : '400'};
+             user-select:none;">
+      ${selected ? '✓' : ''} ${c.name}
+    </span>`;
+  });
+  container.innerHTML = html;
+}
+
+function toggleCategoryFilter(catId) {
+  const idx = _selectedCategoryIds.indexOf(catId);
+  if (idx >= 0) {
+    _selectedCategoryIds.splice(idx, 1);
+  } else {
+    _selectedCategoryIds.push(catId);
+  }
+  saveSettings();
+  renderCategoryFilter();
+}
+
+function clearCategoryFilter() {
+  _selectedCategoryIds = [];
+  saveSettings();
+  renderCategoryFilter();
+}
+
+// ============================================================
+//  LIBRARY SUB-TAB SWITCHING + 分类拖拽分配
+// ============================================================
+let _selectedCharSet = new Set(); // 分类管理tab中勾选的字
+
+function switchLibTab(tab) {
+  document.querySelectorAll('.lib-tab-btn').forEach(b => {
+    const isActive = b.dataset.libtab === tab;
+    b.classList.toggle('active', isActive);
+    b.style.color = isActive ? '#667eea' : '#718096';
+    b.style.borderBottomColor = isActive ? '#667eea' : 'transparent';
+    b.style.fontWeight = isActive ? '600' : '500';
+  });
+  document.querySelectorAll('.lib-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'libpanel-' + tab);
+    p.style.display = p.id === 'libpanel-' + tab ? 'block' : 'none';
+  });
+  if (tab === 'cat') renderCatAssignment();
+  if (tab === 'chars') refreshLibrary();
+}
+
+function renderCatAssignment() {
+  const dropZone = document.getElementById('catDropZone');
+  const charList = document.getElementById('catCharList');
+  const countEl = document.getElementById('selectedCharCount');
+
+  // 渲染分类拖拽目标
+  const flat = getAllCategoriesFlat(appData.categories || []);
+  if (flat.length === 0) {
+    dropZone.innerHTML = '<span style="font-size:13px;color:#a0aec0;width:100%;">暂无分类，请先在上方创建</span>';
+  } else {
+    let html = '';
+    flat.forEach(c => {
+      const charCount = Object.values(appData.dict).filter(d => d.categoryId === c.id).length;
+      html += `<div draggable="false"
+        ondrop="onCategoryDrop(event, '${c.id}')" ondragover="onDragOver(event)"
+        onclick="assignSelectedToCategory('${c.id}')"
+        style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+               border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;
+               border:2px dashed #667eea;background:#ebf4ff;color:#667eea;
+               transition:all 0.15s;user-select:none;"
+        onmouseover="this.style.background='#d6e4ff';this.style.borderStyle='solid'"
+        onmouseout="this.style.background='#ebf4ff';this.style.borderStyle='dashed'">
+        📁 ${c.name} <span style="font-size:11px;opacity:0.7;">${charCount}字</span>
+      </div>`;
+    });
+    dropZone.innerHTML = html;
+  }
+
+  // 渲染可勾选的字列表
+  const entries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+  if (entries.length === 0) {
+    charList.innerHTML = '<p class="empty-msg" style="padding:0;font-size:13px;">暂无字</p>';
+  } else {
+    let html = '';
+    entries.forEach(([ch, info]) => {
+      const checked = _selectedCharSet.has(ch) ? 'checked' : '';
+      const catPath = info.categoryId ? getCategoryPath(appData.categories || [], info.categoryId) : '未分类';
+      html += `<div draggable="true" ondragstart="onCharDragStart(event, '${ch}')"
+        onclick="toggleCharSelect('${ch}')"
+        style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+               border-radius:16px;cursor:pointer;font-size:14px;user-select:none;
+               border:2px solid ${checked ? '#667eea' : '#e2e8f0'};
+               background:${checked ? '#ebf4ff' : '#fff'};
+               color:${checked ? '#667eea' : '#4a5568'};
+               font-weight:${checked ? '600' : '400'};
+               transition:all 0.15s;">
+        <input type="checkbox" ${checked} style="accent-color:#667eea;pointer-events:none;">
+        <span>${ch}</span>
+        <span style="font-size:11px;color:#a0aec0;">${info.pinyin}</span>
+        <span style="font-size:10px;color:#ccc;">${catPath}</span>
+      </div>`;
+    });
+    charList.innerHTML = html;
+  }
+
+  updateCount();
+}
+
+function toggleCharSelect(ch) {
+  if (_selectedCharSet.has(ch)) _selectedCharSet.delete(ch);
+  else _selectedCharSet.add(ch);
+  renderCatAssignment();
+}
+
+function toggleAllCharSelect() {
+  const all = Object.keys(appData.dict);
+  if (_selectedCharSet.size === all.length) {
+    _selectedCharSet = new Set();
+  } else {
+    _selectedCharSet = new Set(all);
+  }
+  renderCatAssignment();
+}
+
+function updateCount() {
+  const el = document.getElementById('selectedCharCount');
+  if (el) el.textContent = `已选 ${_selectedCharSet.size} 个`;
+}
+
+function assignSelectedToCategory(catId) {
+  if (_selectedCharSet.size === 0) { toast('请先勾选要分类的字', 'error'); return; }
+  _selectedCharSet.forEach(ch => {
+    if (appData.dict[ch]) appData.dict[ch].categoryId = catId;
+  });
+  saveData(appData);
+  toast(`已将 ${_selectedCharSet.size} 个字分配到分类`);
+  _selectedCharSet = new Set();
+  renderCatAssignment();
+}
+
+// 拖拽事件
+function onCharDragStart(ev, ch) {
+  ev.dataTransfer.setData('text/plain', ch);
+  ev.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(ev) {
+  ev.preventDefault();
+  ev.dataTransfer.dropEffect = 'move';
+}
+
+function onCategoryDrop(ev, catId) {
+  ev.preventDefault();
+  const ch = ev.dataTransfer.getData('text/plain');
+  if (ch && appData.dict[ch]) {
+    appData.dict[ch].categoryId = catId;
+    saveData(appData);
+    toast(`「${ch}」已分配到分类`);
+    renderCatAssignment();
+  }
 }
 
 // ============================================================
 //  LIBRARY RENDER
 // ============================================================
 function refreshLibrary() {
-  // Char list
+  // 分类树
+  const treeEl = document.getElementById('categoryTree');
+  if (treeEl) {
+    if (!appData.categories || appData.categories.length === 0) {
+      treeEl.innerHTML = '<p class="empty-msg">暂无分类，可在上方添加</p>';
+    } else {
+      treeEl.innerHTML = renderCategoryTreeHtml(appData.categories, 0);
+    }
+  }
+  updateCategorySelects();
+  renderCatAssignment();
+
+  // Char list (带分类信息 + 可编辑分类)
   const charEntries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
   document.getElementById('charCount').textContent = charEntries.length;
   const charContainer = document.getElementById('charList');
@@ -873,7 +1706,11 @@ function refreshLibrary() {
   } else {
     let html = '<div class="tag-list">';
     charEntries.forEach(([ch, info]) => {
-      html += `<span class="tag">${ch} <span style="color:#718096;font-size:12px;">${info.pinyin}</span> <span class="remove" onclick="removeChar('${ch}')">×</span></span>`;
+      const catPath = info.categoryId ? getCategoryPath(appData.categories || [], info.categoryId) : '';
+      const catDisplay = catPath
+        ? `<span onclick="editCharCategory('${ch}')" style="color:#667eea;font-size:11px;cursor:pointer;border-bottom:1px dashed #667eea;" title="点击修改分类">[${catPath}]</span>`
+        : `<span onclick="editCharCategory('${ch}')" style="color:#a0aec0;font-size:11px;cursor:pointer;border-bottom:1px dashed #ccc;" title="点击设置分类">[未分类]</span>`;
+      html += `<span class="tag">${ch} <span style="color:#718096;font-size:12px;">${info.pinyin}</span> ${catDisplay} <span class="remove" onclick="removeChar('${ch}')">×</span></span>`;
     });
     html += '</div>';
     charContainer.innerHTML = html;
@@ -900,16 +1737,17 @@ function refreshLibrary() {
 // ============================================================
 //  PRACTICE GENERATION
 // ============================================================
-function weightedRandom(items, weightFunc) {
+function weightedRandomIndex(items, weightFunc) {
+  // 返回加权随机选中的元素的索引（而不是元素本身）
   const weights = items.map(weightFunc);
   const totalWeight = weights.reduce((a, b) => a + b, 0);
-  if (totalWeight <= 0) return null;
+  if (totalWeight <= 0) return -1;
   let r = Math.random() * totalWeight;
   for (let i = 0; i < items.length; i++) {
     r -= weights[i];
-    if (r <= 0) return items[i];
+    if (r <= 0) return i;
   }
-  return items[items.length - 1];
+  return items.length - 1;
 }
 
 function shuffle(arr) {
@@ -921,8 +1759,22 @@ function shuffle(arr) {
   return a;
 }
 
+function getFilteredWords() {
+  // 按选中的分类筛选词库
+  if (!_selectedCategoryIds || _selectedCategoryIds.length === 0) {
+    return appData.words; // 未选分类则返回全部
+  }
+  return appData.words.filter(w => {
+    // 词中每个字都要在选中的分类中
+    return w.chars.every(ch => {
+      const info = appData.dict[ch];
+      return info && info.categoryId && _selectedCategoryIds.includes(info.categoryId);
+    });
+  });
+}
+
 function generatePractice(student, totalWords = 50) {
-  const allWords = appData.words;
+  const allWords = getFilteredWords();
   if (allWords.length === 0) return [];
   if (allWords.length <= totalWords) {
     return shuffle(allWords.map(w => ({ wordId: w.id, chars: w.chars, pinyin: w.pinyin })));
@@ -951,12 +1803,12 @@ function generatePractice(student, totalWords = 50) {
   // weighted pick without replacement
   const pool = [...remaining];
   for (let i = 0; i < needed && pool.length > 0; i++) {
-    const idx = weightedRandom(pool, w => {
+    const idx = weightedRandomIndex(pool, w => {
       const stats = (student.wordStats || {})[w.id];
       const total = stats ? stats.total : 0;
       return 1 / (total + 1);
     });
-    if (idx == null) break;
+    if (idx < 0) break;
     const picked = pool.splice(idx, 1)[0];
     result.push({ wordId: picked.id, chars: picked.chars, pinyin: picked.pinyin });
   }
@@ -965,39 +1817,313 @@ function generatePractice(student, totalWords = 50) {
 }
 
 // ============================================================
+//  HISTORY — 历史记录
+// ============================================================
+// ============================================================
+//  通用确认对话框（防误操作）
+// ============================================================
+let _confirmResolve = null;
+
+function showConfirm(msg) {
+  return new Promise(resolve => {
+    const el = document.getElementById('confirmModal');
+    document.getElementById('confirmMsg').textContent = msg;
+    el.classList.add('show');
+    _confirmResolve = resolve;
+  });
+}
+
+function confirmYes() {
+  document.getElementById('confirmModal').classList.remove('show');
+  if (_confirmResolve) { _confirmResolve(true); _confirmResolve = null; }
+}
+
+function confirmNo() {
+  document.getElementById('confirmModal').classList.remove('show');
+  if (_confirmResolve) { _confirmResolve(false); _confirmResolve = null; }
+}
+
+function disableBtn(el, ms = 1500) {
+  if (!el || el.disabled) return;
+  el.disabled = true;
+  el.style.opacity = '0.5';
+  el.style.cursor = 'not-allowed';
+  setTimeout(() => {
+    el.disabled = false;
+    el.style.opacity = '';
+    el.style.cursor = '';
+  }, ms);
+}
+
+// ============================================================
+//  HISTORY — 历史记录（含删除、修改）
+// ============================================================
+function refreshHistory() {
+  const student = ensureStudent();
+  const logs = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date));
+
+  // 统计
+  const totalLogs = logs.length;
+  const totalWords = logs.reduce((s, l) => s + (l.words || []).length, 0);
+  let totalWrong = 0;
+  const charWrongCount = {};
+  logs.forEach(l => (l.words || []).forEach(w => {
+    if (w.wrongIndices && w.wrongIndices.length > 0) {
+      totalWrong++;
+      w.wrongIndices.forEach(ci => {
+        const ch = w.chars && w.chars[ci];
+        if (ch) { charWrongCount[ch] = (charWrongCount[ch] || 0) + 1; }
+      });
+    }
+  }));
+
+  document.getElementById('historySummary').textContent = `📊 ${student.name} 的历史练习`;
+  document.getElementById('historyStats').innerHTML = `
+    <span class="stat-badge">📅 共 <strong>${totalLogs}</strong> 天</span>
+    <span class="stat-badge">📝 共 <strong>${totalWords}</strong> 词</span>
+    <span class="stat-badge" style="${totalWrong > 0 ? 'background:#fed7d7;color:#9b2c2c;' : ''}">❌ 错 <strong>${totalWrong}</strong> 词</span>
+    ${totalWords > 0 ? `<span class="stat-badge">✅ 正确率 <strong>${Math.round((totalWords - totalWrong) / totalWords * 100)}%</strong></span>` : ''}
+  `;
+
+  // 历史练习列表
+  const listEl = document.getElementById('historyList');
+  if (logs.length === 0) {
+    listEl.innerHTML = '<p class="empty-msg">暂无历史记录。生成并打印/提交批改后会自动记录。</p>';
+  } else {
+    let html = '';
+    logs.forEach((l, li) => {
+      const wCount = (l.words || []).length;
+      const wWrong = (l.words || []).filter(w => w.wrongIndices && w.wrongIndices.length > 0).length;
+      const rate = wCount > 0 ? Math.round((wCount - wWrong) / wCount * 100) : 100;
+      html += `<div style="padding:10px 14px;background:#f7fafc;border-radius:10px;margin-bottom:6px;
+                display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+                border-left:4px solid ${rate === 100 ? '#48bb78' : rate >= 80 ? '#ed8936' : '#fc8181'};">
+        <span style="font-weight:600;min-width:85px;">📅 ${l.date}</span>
+        <span style="font-size:13px;color:#4a5568;">${wCount} 词</span>
+        <span style="font-size:13px;color:${wWrong > 0 ? '#e53e3e' : '#48bb78'};">${wWrong > 0 ? `❌ 错 ${wWrong}` : '✅ 全对'}</span>
+        <span style="font-size:13px;color:#718096;">${rate}%</span>
+        <button class="btn btn-ghost btn-sm" onclick="showHistoryDetail(${li})">📋 详情</button>
+        <button class="btn btn-ghost btn-sm" onclick="editHistoryLog(${li})">✏️ 修改</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteHistoryLog(${li}, this)" style="color:#e53e3e;">🗑️ 删除</button>
+      </div>`;
+    });
+    listEl.innerHTML = html;
+  }
+
+  // 常错字排行
+  const rankEl = document.getElementById('errorCharRanking');
+  const sorted = Object.entries(charWrongCount).sort((a, b) => b[1] - a[1]);
+  if (sorted.length === 0) {
+    rankEl.innerHTML = '<p class="empty-msg">暂无错字记录，继续保持！🎉</p>';
+  } else {
+    let html = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    sorted.forEach(([ch, count], i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+      html += `<span class="tag" style="background:${i < 3 ? '#fed7d7' : '#f7fafc'};font-weight:${i < 3 ? '700' : '400'};">
+        ${medal} ${ch} <span style="color:#e53e3e;">(${count} 次)</span>
+      </span>`;
+    });
+    html += '</div>';
+    rankEl.innerHTML = html;
+  }
+}
+
+function editHistoryLog(logIndex) {
+  const student = ensureStudent();
+  const logs = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date));
+  const log = logs[logIndex];
+  if (!log) return;
+
+  // 展开编辑界面
+  const words = log.words || [];
+  let html = `<div style="padding:12px;background:#fff;border-radius:10px;border:2px solid #667eea;margin-top:8px;" class="history-edit">`;
+  html += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+    <span style="font-size:14px;font-weight:600;">✏️ 修改 ${log.date} 批改</span>
+    <span style="font-size:12px;color:#718096;">点击字切换对错标记</span>
+  </div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  words.forEach((w, wi) => {
+    const wrongSet = new Set(w.wrongIndices || []);
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f7fafc;border-radius:8px;flex-wrap:wrap;">`;
+    html += `<span style="color:#a0aec0;font-size:12px;min-width:20px;">${wi + 1}.</span>`;
+    html += `<span style="color:#667eea;font-size:12px;min-width:60px;">${w.pinyin}</span>`;
+    (w.chars || []).forEach((ch, ci) => {
+      const isWrong = wrongSet.has(ci);
+      const editKey = `${logIndex}_${wi}_${ci}`;
+      html += `<span class="history-edit-char" data-editkey="${editKey}"
+        onclick="toggleHistoryChar('${logIndex}', ${wi}, ${ci})"
+        style="display:inline-flex;align-items:center;justify-content:center;
+               width:36px;height:36px;font-size:18px;font-weight:600;
+               border-radius:6px;cursor:pointer;transition:all 0.12s;
+               border:2px solid ${isWrong ? '#fc8181' : '#e2e8f0'};
+               background:${isWrong ? '#fff5f5' : '#fff'};
+               color:${isWrong ? '#c53030' : '#2d3748'};">${ch}</span>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div>`;
+  html += `<div style="display:flex;gap:8px;margin-top:10px;">
+    <button class="btn btn-primary btn-sm" onclick="saveHistoryEdit(${logIndex}, this)">💾 保存修改</button>
+    <button class="btn btn-ghost btn-sm" onclick="cancelHistoryEdit()">取消</button>
+  </div></div>`;
+
+  // 移除旧的编辑区
+  cancelHistoryEdit();
+  const container = document.getElementById('historyList');
+  const editDiv = document.createElement('div');
+  editDiv.className = 'history-edit-container';
+  editDiv.innerHTML = html;
+  container.appendChild(editDiv);
+  window._editingLogIndex = logIndex;
+}
+
+async function deleteHistoryLog(logIndex, btn) {
+  if (btn) disableBtn(btn, 2000);
+  const ok = await showConfirm('确定要删除这条历史记录吗？此操作不可撤销。');
+  if (!ok) return;
+
+  const student = ensureStudent();
+  const logs = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date));
+  const target = logs[logIndex];
+  if (!target) return;
+  student.practiceLog = student.practiceLog.filter(l => l !== target);
+  saveData(appData);
+  toast('✅ 已删除历史记录');
+  refreshHistory();
+}
+
+function toggleHistoryChar(logIdx, wi, ci) {
+  const student = ensureStudent();
+  const logs = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date));
+  const log = logs[logIdx];
+  if (!log || !log.words[wi]) return;
+  const w = log.words[wi];
+  if (!w.wrongIndices) w.wrongIndices = [];
+
+  const idx = w.wrongIndices.indexOf(ci);
+  if (idx >= 0) w.wrongIndices.splice(idx, 1);
+  else w.wrongIndices.push(ci);
+
+  // 更新UI
+  const editKey = `${logIdx}_${wi}_${ci}`;
+  const el = document.querySelector(`.history-edit-char[data-editkey="${editKey}"]`);
+  if (el) {
+    const isWrong = w.wrongIndices.includes(ci);
+    el.style.borderColor = isWrong ? '#fc8181' : '#e2e8f0';
+    el.style.background = isWrong ? '#fff5f5' : '#fff';
+    el.style.color = isWrong ? '#c53030' : '#2d3748';
+  }
+  window._dirtyEdit = true;
+}
+
+function saveHistoryEdit(logIdx, btn) {
+  if (btn) disableBtn(btn, 2000);
+  saveData(appData);
+  toast('✅ 批改已更新');
+  cancelHistoryEdit();
+  refreshHistory();
+}
+
+function cancelHistoryEdit() {
+  document.querySelectorAll('.history-edit-container').forEach(el => el.remove());
+  window._editingLogIndex = null;
+  window._dirtyEdit = false;
+}
+
+function showHistoryDetail(logIndex) {
+  const student = ensureStudent();
+  const log = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date))[logIndex];
+  if (!log) return;
+
+  const words = (log.words || []).map(w => {
+    const wordObj = appData.words.find(x => x.id === w.wordId);
+    return {
+      chars: w.chars || (wordObj ? wordObj.chars : []),
+      pinyin: w.pinyin || (wordObj ? wordObj.pinyin : ''),
+      wrongIndices: w.wrongIndices || []
+    };
+  });
+
+  cancelHistoryEdit();
+  let detailHtml = `<div style="padding:12px;background:#fff;border-radius:10px;border:1px solid #e2e8f0;margin-top:8px;" class="history-detail">`;
+  detailHtml += `<div style="font-size:14px;font-weight:600;margin-bottom:8px;">📅 ${log.date} 详情</div>`;
+  detailHtml += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+  words.forEach((w, i) => {
+    const charEls = w.chars.map((ch, ci) => {
+      const isWrong = w.wrongIndices.includes(ci);
+      return `<span style="display:inline-block;padding:2px 6px;margin:0 1px;
+              border-radius:4px;${isWrong ? 'background:#fed7d7;color:#c53030;font-weight:700;' : ''}">${ch}</span>`;
+    }).join('');
+    detailHtml += `<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;
+                    background:#f7fafc;border-radius:8px;font-size:14px;
+                    border:1px solid ${w.wrongIndices.length > 0 ? '#fc8181' : '#e2e8f0'};">
+      <span style="color:#a0aec0;font-size:12px;">${i + 1}.</span>
+      <span style="color:#667eea;font-size:12px;">${w.pinyin}</span>
+      ${charEls}
+    </div>`;
+  });
+  detailHtml += '</div></div>';
+
+  const existing = document.querySelector('.history-detail');
+  if (existing) existing.remove();
+  const container = document.getElementById('historyList');
+  const detailDiv = document.createElement('div');
+  detailDiv.className = 'history-detail';
+  detailDiv.innerHTML = detailHtml;
+  container.appendChild(detailDiv);
+}
+
+// ============================================================
 //  PRACTICE RENDER
 // ============================================================
 function refreshPractice() {
+  appData = loadData();
   const student = ensureStudent();
   const today = new Date().toISOString().slice(0, 10);
   const existingLog = (student.practiceLog || []).find(log => log.date === today);
 
   const statusEl = document.getElementById('practiceStatus');
   const contentEl = document.getElementById('practiceContent');
+  const wordCountRow = document.getElementById('wordCountInput')?.closest('.form-row');
 
+  // 渲染分类筛选器
+  renderCategoryFilter();
+
+  const filteredCount = getFilteredWords().length;
   const hasEnoughWords = appData.words.length > 0;
 
   if (!hasEnoughWords) {
     statusEl.style.display = 'block';
     contentEl.style.display = 'none';
+    if (wordCountRow) wordCountRow.style.display = 'none';
     statusEl.innerHTML = '<p class="empty-msg">📭 词库为空。请先在「字库管理」中添加字和词语。</p>';
     return;
   }
 
   statusEl.style.display = 'none';
   contentEl.style.display = 'block';
+  if (wordCountRow) wordCountRow.style.display = '';
+
+  // 如果筛选后词库为空，提示
+  if (_selectedCategoryIds.length > 0 && filteredCount === 0) {
+    statusEl.style.display = 'block';
+    contentEl.style.display = 'none';
+    statusEl.innerHTML = '<p class="empty-msg">📭 当前分类下没有可用词语。请调整分类筛选或在「字库管理」中添加词。</p>';
+    return;
+  }
 
   const summaryEl = document.getElementById('practiceSummary');
   const actionsEl = document.getElementById('practiceActions');
   const previewEl = document.getElementById('practicePreview');
   const correctEl = document.getElementById('correctionSection');
 
-  if (existingLog) {
-    // Already generated today
-    const words = existingLog.words.map(w => {
-      const wordObj = appData.words.find(x => x.id === w.wordId);
-      return wordObj ? { wordId: w.wordId, chars: wordObj.chars, pinyin: wordObj.pinyin, correct: w.correct } : null;
-    }).filter(Boolean);
+  // Sync word count input
+  const wcInput = document.getElementById('wordCountInput');
+  if (wcInput) wcInput.value = _wordCountSetting;
+
+  if (window._currentPractice && window._currentPractice.length > 0) {
+    // 已有临时练习 → 显示预览
+    const words = window._currentPractice;
 
     summaryEl.innerHTML = `
       <span class="stat-badge">📅 ${today}</span>
@@ -1006,15 +2132,39 @@ function refreshPractice() {
     actionsEl.innerHTML = `
       <button class="btn btn-primary" onclick="printPractice()">🖨️ 打印</button>
       <button class="btn btn-warning" onclick="showCorrection()">✏️ 批改</button>
+      <button class="btn btn-outline" onclick="regeneratePractice()">🔄 重新出题</button>
     `;
     previewEl.innerHTML = renderPracticePreview(words);
     correctEl.style.display = 'none';
+  } else if (existingLog) {
+    // 已有历史练习记录
+    const words = existingLog.words.map(w => {
+      const wordObj = appData.words.find(x => x.id === w.wordId);
+      if (w.wrongIndices) return { wordId: w.wordId, chars: w.chars || (wordObj ? wordObj.chars : []), pinyin: w.pinyin || (wordObj ? wordObj.pinyin : ''), wrongIndices: w.wrongIndices };
+      return wordObj ? { wordId: w.wordId, chars: wordObj.chars, pinyin: wordObj.pinyin, wrongIndices: w.correct === false ? [0] : [] } : null;
+    }).filter(Boolean);
+
     window._currentPractice = words;
+
+    summaryEl.innerHTML = `
+      <span class="stat-badge">📅 ${today}</span>
+      <span class="stat-badge">📝 共 <strong>${words.length}</strong> 词</span>
+    `;
+    actionsEl.innerHTML = `
+      <button class="btn btn-primary" onclick="printPractice()">🖨️ 打印</button>
+      <button class="btn btn-warning" onclick="showCorrection()">✏️ 批改</button>
+      <button class="btn btn-outline" onclick="regeneratePractice()">🔄 重新出题</button>
+    `;
+    previewEl.innerHTML = renderPracticePreview(words);
+    correctEl.style.display = 'none';
   } else {
-    // Not yet generated
+    // 尚未生成
+    if (wordCountRow) wordCountRow.style.display = '';
+
     summaryEl.innerHTML = `
       <span class="stat-badge">📅 ${today}</span>
       <span class="stat-badge">词库共 <strong>${appData.words.length}</strong> 词</span>
+      ${_selectedCategoryIds.length > 0 ? `<span class="stat-badge">📂 筛选后 <strong>${getFilteredWords().length}</strong> 词</span>` : ''}
     `;
     actionsEl.innerHTML = `
       <button class="btn btn-success" onclick="generateTodayPractice()">🎲 生成今日练习</button>
@@ -1024,13 +2174,28 @@ function refreshPractice() {
   }
 }
 
+function buildTzgWordHtml(word) {
+  const chars = word.chars || [];
+  const pyParts = (word.pinyin || '').split(/\s+/);
+  let html = '<div class="tzg-word">';
+  chars.forEach((ch, ci) => {
+    const py = pyParts[ci] || '';
+    html += `<div class="tzg-char">
+      <span class="pinyin-label">${py}</span>
+      <span class="tzg-box"></span>
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
 function renderPracticePreview(words) {
   if (words.length === 0) return '<p class="empty-msg">暂无练习。</p>';
-  let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px;">';
+  let html = '<div style="display:flex; flex-wrap:wrap; gap:12px 16px; justify-content:center; padding:12px 0;">';
   words.forEach((w, i) => {
-    html += `<div style="padding:8px 12px; background:#f7fafc; border-radius:8px; font-size:15px;">
-      <span style="color:#a0aec0; margin-right:8px;">${i + 1}.</span>
-      <span style="color:#667eea; font-weight:500;">${w.pinyin}</span>
+    html += `<div style="display:flex; align-items:center; gap:6px; background:#f7fafc; border-radius:10px; padding:6px 10px;">
+      <span style="color:#a0aec0; font-size:13px; min-width:20px;">${i + 1}.</span>
+      ${buildTzgWordHtml(w)}
     </div>`;
   });
   html += '</div>';
@@ -1039,114 +2204,162 @@ function renderPracticePreview(words) {
 
 function generateTodayPractice() {
   const student = ensureStudent();
-  const today = new Date().toISOString().slice(0, 10);
 
-  if ((student.practiceLog || []).some(log => log.date === today)) {
-    toast('今日练习已生成，请勿重复生成', 'error');
-    refreshPractice();
-    return;
-  }
+  // 读取用户设置的题目数量
+  const wcInput = document.getElementById('wordCountInput');
+  const desiredCount = wcInput ? Math.max(1, parseInt(wcInput.value) || 50) : 50;
+  _wordCountSetting = desiredCount;
+  saveSettings();
 
-  const practice = generatePractice(student);
+  const practice = generatePractice(student, desiredCount);
   if (practice.length === 0) {
     toast('词库不足，无法生成练习', 'error');
     return;
   }
 
-  const logEntry = {
-    date: today,
-    words: practice.map(w => ({ wordId: w.wordId, correct: null }))
-  };
-  if (!student.practiceLog) student.practiceLog = [];
-  student.practiceLog.push(logEntry);
-  saveData(appData);
+  window._currentPractice = practice;
 
-  toast(`已生成 ${practice.length} 道练习`);
+  toast(`已生成 ${practice.length} 道练习（打印后将自动记录）`);
+  refreshPractice();
+}
+
+function regeneratePractice() {
+  appData = loadData();
+  const student = ensureStudent();
+
+  // 读取用户最新设置的题目数量
+  const wcInput = document.getElementById('wordCountInput');
+  const desiredCount = wcInput ? Math.max(1, parseInt(wcInput.value) || 50) : 50;
+  _wordCountSetting = desiredCount;
+  saveSettings();
+
+  // 重新生成（不写入 practiceLog，打印时才记录）
+  const practice = generatePractice(student, desiredCount);
+  if (practice.length === 0) {
+    toast('词库不足，无法生成练习', 'error');
+    return;
+  }
+
+  window._currentPractice = practice;
+
+  toast(`🔄 已重新出题，共 ${practice.length} 道`);
   refreshPractice();
 }
 
 // ============================================================
-//  CORRECTION
+//  CORRECTION — 默认全对，仅标记错字（点击单个字切换错误）
 // ============================================================
 function showCorrection() {
-  const student = ensureStudent();
-  const today = new Date().toISOString().slice(0, 10);
-  const log = (student.practiceLog || []).find(l => l.date === today);
-  if (!log) { toast('没有找到今日练习', 'error'); return; }
+  const words = window._currentPractice;
+  if (!words || words.length === 0) { toast('没有练习可批改，请先生成', 'error'); return; }
 
-  const words = log.words.map(w => {
-    const wordObj = appData.words.find(x => x.id === w.wordId);
-    return wordObj ? { ...w, chars: wordObj.chars, pinyin: wordObj.pinyin } : null;
-  }).filter(Boolean);
-
-  if (words.length === 0) { toast('练习数据异常', 'error'); return; }
+  // 确保每个词有 wrongIndices
+  words.forEach(w => { if (!w.wrongIndices) w.wrongIndices = []; });
 
   const container = document.getElementById('correctList');
   let html = '';
   words.forEach((w, i) => {
-    const rightActive = w.correct === true ? 'active' : '';
-    const wrongActive = w.correct === false ? 'active' : '';
-    html += `<div class="correct-item" data-index="${i}">
-      <div class="word-info">
+    // wrongIndices: 上次标记写错的字的索引数组，默认空数组（全对）
+    const wrongSet = new Set(w.wrongIndices || []);
+    html += `<div class="correct-item" data-index="${i}" style="flex-direction:column;align-items:stretch;gap:4px;">
+      <div class="word-info" style="font-size:13px;color:#718096;">
         <span class="pinyin">${w.pinyin}</span>
-        <span class="hanzi">${w.chars.join('')}</span>
       </div>
-      <div class="correct-actions">
-        <button class="btn btn-correct right ${rightActive}" onclick="markCorrect(${i}, true)">✓ 对</button>
-        <button class="btn btn-correct wrong ${wrongActive}" onclick="markCorrect(${i}, false)">✗ 错</button>
-      </div>
+      <div style="display:flex;gap:6px;justify-content:center;">`;
+    w.chars.forEach((ch, ci) => {
+      const isWrong = wrongSet.has(ci);
+      html += `<span class="correction-char ${isWrong ? 'wrong' : ''}"
+        onclick="toggleCharWrong(${i}, ${ci})"
+        style="display:inline-flex;align-items:center;justify-content:center;
+               width:40px;height:40px;font-size:22px;font-weight:600;
+               border-radius:8px;cursor:pointer;transition:all 0.15s;
+               border:2px solid ${isWrong ? '#fc8181' : '#e2e8f0'};
+               background:${isWrong ? '#fff5f5' : '#f7fafc'};
+               color:${isWrong ? '#c53030' : '#2d3748'};">
+        ${ch}
+      </span>`;
+    });
+    html += `    </div>
     </div>`;
   });
   container.innerHTML = html;
 
   document.getElementById('correctionSection').style.display = 'block';
-  window._correctionIndex = 0;
 }
 
-function markCorrect(index, isCorrect) {
-  const items = document.querySelectorAll('.correct-item');
-  const item = items[index];
-  if (!item) return;
-  const rightBtn = item.querySelector('.btn-correct.right');
-  const wrongBtn = item.querySelector('.btn-correct.wrong');
-  rightBtn.classList.toggle('active', isCorrect === true);
-  wrongBtn.classList.toggle('active', isCorrect === false);
+function toggleCharWrong(wordIndex, charIndex) {
+  const words = window._currentPractice;
+  if (!words || !words[wordIndex]) return;
 
-  // Update the log in memory
-  const student = ensureStudent();
-  const today = new Date().toISOString().slice(0, 10);
-  const log = (student.practiceLog || []).find(l => l.date === today);
-  if (log && log.words[index] != null) {
-    log.words[index].correct = isCorrect;
+  const w = words[wordIndex];
+  if (!w.wrongIndices) w.wrongIndices = [];
+
+  const idx = w.wrongIndices.indexOf(charIndex);
+  if (idx >= 0) {
+    w.wrongIndices.splice(idx, 1);
+  } else {
+    w.wrongIndices.push(charIndex);
+  }
+
+  // 更新 UI
+  const items = document.querySelectorAll('.correct-item');
+  const chars = items[wordIndex]?.querySelectorAll('.correction-char');
+  if (chars && chars[charIndex]) {
+    chars[charIndex].classList.toggle('wrong');
+    const isWrong = w.wrongIndices.includes(charIndex);
+    chars[charIndex].style.borderColor = isWrong ? '#fc8181' : '#e2e8f0';
+    chars[charIndex].style.background = isWrong ? '#fff5f5' : '#f7fafc';
+    chars[charIndex].style.color = isWrong ? '#c53030' : '#2d3748';
   }
 }
 
 function submitCorrection() {
   const student = ensureStudent();
   const today = new Date().toISOString().slice(0, 10);
+
+  // 保存当前练习到记录
+  if (window._currentPractice) {
+    if (student.practiceLog) {
+      student.practiceLog = student.practiceLog.filter(log => log.date !== today);
+    }
+    const logEntry = {
+      date: today,
+      words: window._currentPractice.map(w => ({
+        wordId: w.wordId, chars: w.chars, pinyin: w.pinyin, wrongIndices: w.wrongIndices || []
+      }))
+    };
+    if (!student.practiceLog) student.practiceLog = [];
+    student.practiceLog.push(logEntry);
+    saveData(appData);
+  }
+
   const log = (student.practiceLog || []).find(l => l.date === today);
   if (!log) { toast('没有找到今日练习', 'error'); return; }
 
-  const unchecked = log.words.some(w => w.correct === null);
-  if (unchecked) {
-    if (!confirm('还有未标记的词语，确定提交吗？未标记的将视为正确。')) return;
-  }
-
   log.words.forEach(w => {
-    const isCorrect = w.correct !== false; // null or true => correct
+    const isCorrect = !w.wrongIndices || w.wrongIndices.length === 0;
     const stats = student.wordStats[w.wordId] || { total: 0, wrong: 0, lastDate: '' };
     stats.total = (stats.total || 0) + 1;
     if (!isCorrect) stats.wrong = (stats.wrong || 0) + 1;
     stats.lastDate = today;
     student.wordStats[w.wordId] = stats;
 
-    // Update errorWordIds
+    // 错字记录：记录哪些字的哪些索引写错了
     if (!isCorrect) {
+      if (!student.errorCharIds) student.errorCharIds = {};
+      w.wrongIndices.forEach(ci => {
+        const ch = w.chars[ci];
+        if (!student.errorCharIds[ch]) student.errorCharIds[ch] = 0;
+        student.errorCharIds[ch]++;
+      });
+      // 整个词标记为错误词
+      if (!student.errorWordIds) student.errorWordIds = [];
       if (!student.errorWordIds.includes(w.wordId)) {
         student.errorWordIds.push(w.wordId);
       }
     } else {
-      student.errorWordIds = student.errorWordIds.filter(id => id !== w.wordId);
+      // 全对则从错词中移除
+      student.errorWordIds = (student.errorWordIds || []).filter(id => id !== w.wordId);
     }
   });
 
@@ -1162,6 +2375,24 @@ function submitCorrection() {
 function printPractice() {
   const student = ensureStudent();
   const today = new Date().toISOString().slice(0, 10);
+
+  // 保存当前练习到记录
+  if (window._currentPractice) {
+    if (student.practiceLog) {
+      student.practiceLog = student.practiceLog.filter(log => log.date !== today);
+    }
+    const logEntry = {
+      date: today,
+      words: window._currentPractice.map(w => ({
+        wordId: w.wordId, chars: w.chars, pinyin: w.pinyin, wrongIndices: w.wrongIndices || []
+      }))
+    };
+    if (!student.practiceLog) student.practiceLog = [];
+    student.practiceLog.push(logEntry);
+    saveData(appData);
+  }
+
+  // 从 practiceLog 获取打印数据
   const log = (student.practiceLog || []).find(l => l.date === today);
   if (!log || log.words.length === 0) { toast('没有练习可打印', 'error'); return; }
 
@@ -1170,7 +2401,7 @@ function printPractice() {
     return wordObj ? { chars: wordObj.chars, pinyin: wordObj.pinyin } : null;
   }).filter(Boolean);
 
-  // Split into pages (25 per page)
+  // Split into pages (25 per page = 5 cols x 5 rows)
   const perPage = 25;
   const pages = [];
   for (let i = 0; i < words.length; i += perPage) {
@@ -1181,31 +2412,45 @@ function printPractice() {
   pages.forEach((pageWords, pageIdx) => {
     html += `<div class="print-page">
       <div class="print-title">看拼音写词语</div>
-      <div class="print-subtitle">姓名：${student.name}　　日期：${today}</div>
-      <table class="print-table">`;
+      <div class="print-student-info">姓名：${student.name}　　日期：${today}</div>
+      <div class="print-grid">`;
 
-    // 5 columns x rows
-    const cols = 5;
-    const rows = Math.ceil(pageWords.length / cols);
-    let idx = 0;
-    for (let r = 0; r < rows; r++) {
-      html += '<tr>';
-      for (let c = 0; c < cols; c++) {
-        if (idx < pageWords.length) {
-          const w = pageWords[idx];
-          html += `<td><span class="pinyin">${w.pinyin}</span><span class="underline"></span></td>`;
-        } else {
-          html += '<td></td>';
-        }
-        idx++;
-      }
-      html += '</tr>';
-    }
-    html += '</table></div>';
+    pageWords.forEach(w => {
+      html += `<div class="print-grid-item">${buildTzgWordHtml(w)}</div>`;
+    });
+
+    html += '</div></div>';
   });
 
   document.getElementById('printArea').innerHTML = html;
   setTimeout(() => window.print(), 200);
+}
+
+// ============================================================
+//  GLOBALS
+// ============================================================
+const SETTINGS_KEY = 'kanpinyin_settings';
+let _wordCountSetting = 50; // 用户设定的题目数量
+let _selectedCategoryIds = []; // 用户选中的分类 ID 列表（出题面板）
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s.wordCount && s.wordCount > 0) _wordCountSetting = s.wordCount;
+      if (s.categoryIds && Array.isArray(s.categoryIds)) _selectedCategoryIds = s.categoryIds;
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      wordCount: _wordCountSetting,
+      categoryIds: _selectedCategoryIds
+    }));
+  } catch (e) { /* ignore */ }
 }
 
 // ============================================================
@@ -1251,10 +2496,75 @@ document.getElementById('newStudentName').addEventListener('keydown', e => {
 // Compose char select change
 document.getElementById('composeCharSelect').addEventListener('change', onComposeCharChange);
 
+// ============================================================
+//  BACKEND STATUS — 自动检测后端连接状态
+// ============================================================
+const BACKEND_URL = 'http://localhost:5001';
+let _backendCheckCount = 0;
+const MAX_BACKEND_RETRIES = 10;
+
+function updateBackendStatus(connected, msg) {
+  const el = document.getElementById('backendStatus');
+  if (!el) return;
+  const dot = el.querySelector('.status-dot');
+  const text = el.querySelector('.status-text');
+  if (connected) {
+    dot.style.background = '#48bb78';
+    text.textContent = msg || '后端已连接';
+    el.style.background = 'rgba(72,187,120,0.25)';
+  } else {
+    dot.style.background = msg && msg.includes('重试') ? '#ed8936' : '#fc8181';
+    text.textContent = msg || '后端未连接';
+    el.style.background = msg && msg.includes('重试') ? 'rgba(237,137,54,0.15)' : 'rgba(252,129,129,0.15)';
+  }
+}
+
+async function checkBackend() {
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/health`, { signal: AbortSignal.timeout(3000) });
+    if (resp.ok) {
+      updateBackendStatus(true, '后端已连接');
+      return true;
+    }
+    throw new Error('Not OK');
+  } catch (e) {
+    _backendCheckCount++;
+    if (_backendCheckCount < MAX_BACKEND_RETRIES) {
+      const retryMsg = `后端未就绪 (${_backendCheckCount}/${MAX_BACKEND_RETRIES})`;
+      updateBackendStatus(false, retryMsg);
+      return false;
+    }
+    updateBackendStatus(false, '后端未启动');
+    return false;
+  }
+}
+
+async function autoConnectBackend() {
+  updateBackendStatus(false, '连接中...');
+  for (let i = 0; i < MAX_BACKEND_RETRIES; i++) {
+    const ok = await checkBackend();
+    if (ok) return;
+    // Wait before retrying
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  // Final failure — show helpful message
+  updateBackendStatus(false, '❌ 请启动后端');
+  console.warn(
+    '后端服务未启动。请运行以下命令启动：\n' +
+    '  方法一：双击 start.bat\n' +
+    '  方法二：python server/app.py\n' +
+    '  方法三：VS Code 终端 → 运行任务「启动后端服务」'
+  );
+}
+
 // Initialize
+loadSettings();
 renderStudentSelect();
 ensureStudent();
 refreshAll();
+
+// Auto-connect backend on page load
+autoConnectBackend();
 </script>
 
 </body>
