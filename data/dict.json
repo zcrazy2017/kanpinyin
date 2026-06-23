@@ -1,28 +1,994 @@
 {
   "春": {
-    "pinyin": "chūn",
-    "categoryId": "cat_mqqfv7gao4n"
-  },
-  "冬": {
-    "pinyin": "dōng"
+    "categoryId": "cat_mqqfv7gao4n",
+    "pinyin": "chūn"
   },
   "天": {
-    "pinyin": "tīan",
+    "pinyin": "tīan"
+  },
+  "走": {
+    "pinyin": "zǒu",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "开": {
+    "pinyin": "kāi"
+  },
+  "水": {
+    "pinyin": "shǔi"
+  },
+  "河": {
+    "pinyin": "hé",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "江": {
+    "pinyin": "jīang",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "说": {
+    "pinyin": "shūo",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "明": {
+    "pinyin": "míng",
     "categoryId": "cat_mqqfv7gao4n"
   },
-  "秋": {
-    "pinyin": "qīu"
+  "让": {
+    "pinyin": "ràng",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "自": {
+    "pinyin": "zì",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "主": {
+    "pinyin": "zhǔ",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "大": {
+    "pinyin": "dà"
+  },
+  "己": {
+    "pinyin": "jǐ",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "方": {
+    "pinyin": "fāng",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "从": {
+    "categoryId": "cat_mqqfvf7yq09",
+    "pinyin": "cóng"
+  },
+  "来": {
+    "pinyin": "lái"
+  },
+  "好": {
+    "pinyin": "hǎo",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "人": {
+    "pinyin": "rén"
+  },
+  "的": {
+    "pinyin": "de",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "我": {
+    "pinyin": "wǒ",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "们": {
+    "pinyin": "men",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "叫": {
+    "pinyin": "jìao",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "他": {
+    "pinyin": "tā",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "回": {
+    "pinyin": "húi",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "头": {
+    "pinyin": "tóu"
+  },
+  "快": {
+    "pinyin": "kùai",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "飞": {
+    "pinyin": "fēi",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "乐": {
+    "pinyin": "lè",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "可": {
+    "pinyin": "kě"
+  },
+  "当": {
+    "pinyin": "dāng",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "书": {
+    "pinyin": "shū",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "画": {
+    "pinyin": "hùa",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "写": {
+    "pinyin": "xǐe",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "风": {
+    "pinyin": "fēng"
+  },
+  "牛": {
+    "pinyin": "níu"
+  },
+  "毛": {
+    "pinyin": "máo",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "止": {
+    "pinyin": "zhǐ",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "千": {
+    "pinyin": "qīan",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "金": {
+    "pinyin": "jīn"
+  },
+  "寸": {
+    "pinyin": "cùn",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "丁": {
+    "pinyin": "dīng",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "元": {
+    "pinyin": "yúan",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "力": {
+    "pinyin": "lì"
+  },
+  "心": {
+    "pinyin": "xīn"
+  },
+  "斤": {
+    "pinyin": "jīn",
+    "categoryId": "cat_mqqfvf7yq09"
+  },
+  "八": {
+    "pinyin": "bā"
+  },
+  "万": {
+    "pinyin": "wàn",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "为": {
+    "pinyin": "wèi",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "久": {
+    "pinyin": "jǐu",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "么": {
+    "pinyin": "me",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "义": {
+    "pinyin": "yì",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "习": {
+    "pinyin": "xí",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "乡": {
+    "pinyin": "xīang",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "井": {
+    "pinyin": "jǐng",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "交": {
+    "pinyin": "jīao",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "产": {
+    "categoryId": "cat_mqqfvca90jr",
+    "pinyin": "chǎn"
+  },
+  "京": {
+    "pinyin": "jīng",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "什": {
+    "pinyin": "shén",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "今": {
+    "pinyin": "jīn",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "会": {
+    "pinyin": "huì",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "伞": {
+    "pinyin": "sǎn",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "住": {
+    "pinyin": "zhù",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "光": {
+    "pinyin": "gūang",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "兔": {
+    "pinyin": "tù",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "党": {
+    "pinyin": "dǎng",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "入": {
+    "pinyin": "rù",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "共": {
+    "pinyin": "gòng",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "兴": {
+    "pinyin": "xīng",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "册": {
+    "categoryId": "cat_mqqfvi8t2kx",
+    "pinyin": "cè"
+  },
+  "再": {
+    "pinyin": "zài",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "冬": {
+    "categoryId": "cat_mqqfv7gao4n",
+    "pinyin": "dōng"
+  },
+  "分": {
+    "pinyin": "fēn",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "到": {
+    "pinyin": "dào",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "前": {
+    "pinyin": "qían",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "加": {
+    "pinyin": "jīa",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "动": {
+    "pinyin": "dòng",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "包": {
+    "categoryId": "cat_mqqfvl5ffqa",
+    "pinyin": "bāo"
+  },
+  "北": {
+    "categoryId": "cat_mqqfvca90jr",
+    "pinyin": "běi"
+  },
+  "卡": {
+    "pinyin": "kǎ",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "双": {
+    "pinyin": "shūang",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "古": {
+    "pinyin": "gǔ",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "台": {
+    "pinyin": "tái",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "吃": {
+    "categoryId": "cat_mqqfvi8t2kx",
+    "pinyin": "chī"
+  },
+  "合": {
+    "pinyin": "hé",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "后": {
+    "pinyin": "hòu",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "向": {
+    "pinyin": "xìang",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "吓": {
+    "pinyin": "xià",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "听": {
+    "pinyin": "tīng",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "吹": {
+    "pinyin": "chūi",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "告": {
+    "pinyin": "gào",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "唱": {
+    "categoryId": "cat_mqqfvo44l7t",
+    "pinyin": "chàng"
+  },
+  "国": {
+    "pinyin": "gúo",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "地": {
+    "pinyin": "dì",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "坐": {
+    "pinyin": "zùo",
+    "categoryId": "cat_mqqfvr4miug"
   },
   "夏": {
     "pinyin": "xià"
   },
+  "夕": {
+    "pinyin": "xī",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "太": {
+    "pinyin": "tài",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "她": {
+    "pinyin": "tā",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "字": {
+    "pinyin": "zì",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "学": {
+    "pinyin": "xúe",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "它": {
+    "pinyin": "tā",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "安": {
+    "categoryId": "cat_mqqfvr4miug",
+    "pinyin": "ān"
+  },
+  "家": {
+    "pinyin": "jīa",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "对": {
+    "pinyin": "dùi",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "尖": {
+    "pinyin": "jīan",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "巾": {
+    "pinyin": "jīn",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "师": {
+    "pinyin": "shī",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "干": {
+    "pinyin": "gàn",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "平": {
+    "pinyin": "píng",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "广": {
+    "pinyin": "gǔang",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "床": {
+    "categoryId": "cat_mqqfvi8t2kx",
+    "pinyin": "chúang"
+  },
+  "往": {
+    "pinyin": "wǎng",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "怕": {
+    "pinyin": "pà",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "思": {
+    "pinyin": "sī",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "户": {
+    "pinyin": "hù",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "房": {
+    "pinyin": "fáng",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "打": {
+    "pinyin": "dǎ",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "找": {
+    "pinyin": "zhǎo",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "抱": {
+    "categoryId": "cat_mqqfvl5ffqa",
+    "pinyin": "bào"
+  },
+  "支": {
+    "pinyin": "zhī",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "放": {
+    "pinyin": "fàng",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "故": {
+    "pinyin": "gù",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "文": {
+    "pinyin": "wén",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "斗": {
+    "pinyin": "dǒu",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "无": {
+    "pinyin": "wú",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "早": {
+    "pinyin": "zǎo",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "时": {
+    "pinyin": "shí",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "星": {
+    "pinyin": "xīng",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "晴": {
+    "pinyin": "qíng",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "朵": {
+    "pinyin": "dǔo",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "机": {
+    "pinyin": "jī",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "林": {
+    "pinyin": "lín",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "样": {
+    "pinyin": "yàng",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "欢": {
+    "pinyin": "hūan",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "气": {
+    "pinyin": "qì",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "池": {
+    "categoryId": "cat_mqqfvo44l7t",
+    "pinyin": "chí"
+  },
+  "沙": {
+    "pinyin": "shā",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "没": {
+    "pinyin": "méi",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "泪": {
+    "pinyin": "lèi",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "洗": {
+    "pinyin": "xǐ",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "清": {
+    "pinyin": "qīng",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "灯": {
+    "pinyin": "dēng",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "点": {
+    "pinyin": "dǐan",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "父": {
+    "pinyin": "fù",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "片": {
+    "pinyin": "pìan",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "物": {
+    "pinyin": "wù",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "玉": {
+    "pinyin": "yù",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "玩": {
+    "pinyin": "wán",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "瓜": {
+    "pinyin": "gūa",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "生": {
+    "pinyin": "shēng",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "电": {
+    "pinyin": "dìan",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "百": {
+    "categoryId": "cat_mqqfvr4miug",
+    "pinyin": "bǎi"
+  },
+  "皮": {
+    "pinyin": "pí",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "看": {
+    "pinyin": "kàn",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "眼": {
+    "pinyin": "yǎn",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "着": {
+    "pinyin": "zhe",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "知": {
+    "pinyin": "zhī",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "秋": {
+    "pinyin": "qīu"
+  },
+  "空": {
+    "pinyin": "kōng",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "站": {
+    "pinyin": "zhàn",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "笑": {
+    "pinyin": "xìao",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "笔": {
+    "categoryId": "cat_mqqfvr4miug",
+    "pinyin": "bǐ"
+  },
+  "米": {
+    "pinyin": "mǐ",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "红": {
+    "pinyin": "hóng",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "细": {
+    "pinyin": "xì",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "网": {
+    "pinyin": "wǎng",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "美": {
+    "pinyin": "měi",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "老": {
+    "pinyin": "lǎo",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "肉": {
+    "pinyin": "ròu",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "胡": {
+    "pinyin": "hú",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "色": {
+    "pinyin": "sè",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "节": {
+    "pinyin": "jíe",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "花": {
+    "pinyin": "hūa",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "苗": {
+    "pinyin": "míao",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "草": {
+    "categoryId": "cat_mqqfvtz6n08",
+    "pinyin": "cǎo"
+  },
+  "行": {
+    "pinyin": "xíng",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "衣": {
+    "pinyin": "yī",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "角": {
+    "pinyin": "jiǎo",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "言": {
+    "pinyin": "yán",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "认": {
+    "pinyin": "rèn",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "讲": {
+    "pinyin": "jǐang",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "语": {
+    "pinyin": "yǔ",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "请": {
+    "pinyin": "qǐng",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "课": {
+    "pinyin": "kè",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "豆": {
+    "pinyin": "dòu",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "象": {
+    "pinyin": "xìang",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "贝": {
+    "categoryId": "cat_mqqfvo44l7t",
+    "pinyin": "bèi"
+  },
+  "赶": {
+    "pinyin": "gǎn",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "足": {
+    "pinyin": "zú",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "跑": {
+    "pinyin": "pǎo",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "身": {
+    "pinyin": "shēn",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "车": {
+    "categoryId": "cat_mqqfvr4miug",
+    "pinyin": "chē"
+  },
+  "边": {
+    "categoryId": "cat_mqqfvtz6n08",
+    "pinyin": "bīan"
+  },
+  "过": {
+    "pinyin": "gùo",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "运": {
+    "pinyin": "yùn",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "近": {
+    "pinyin": "jìn",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "还": {
+    "pinyin": "hái",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "这": {
+    "pinyin": "zhè",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "远": {
+    "pinyin": "yǔan",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "造": {
+    "pinyin": "zào",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "道": {
+    "pinyin": "dào",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "都": {
+    "pinyin": "dōu",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "采": {
+    "categoryId": "cat_mqqfvo44l7t",
+    "pinyin": "cǎi"
+  },
+  "问": {
+    "pinyin": "wèn",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "间": {
+    "pinyin": "jiān",
+    "categoryId": "cat_mqqfvi8t2kx"
+  },
+  "阳": {
+    "pinyin": "yáng",
+    "categoryId": "cat_mqqfvca90jr"
+  },
+  "雪": {
+    "pinyin": "xǔe",
+    "categoryId": "cat_mqqfvl5ffqa"
+  },
+  "青": {
+    "pinyin": "qīng",
+    "categoryId": "cat_mqqfv7gao4n"
+  },
+  "面": {
+    "pinyin": "mìan",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "页": {
+    "pinyin": "yè",
+    "categoryId": "cat_mqqfvtz6n08"
+  },
+  "饱": {
+    "categoryId": "cat_mqqfvl5ffqa",
+    "pinyin": "bǎo"
+  },
+  "首": {
+    "pinyin": "shǒu",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
+  "高": {
+    "pinyin": "gāo",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "鱼": {
+    "pinyin": "yú",
+    "categoryId": "cat_mqqfvo44l7t"
+  },
   "瑞": {
     "pinyin": "rùi"
   },
-  "快": {
-    "pinyin": "kùai"
+  "用": {
+    "pinyin": "yòng"
   },
-  "走": {
-    "pinyin": "zǒu"
+  "门": {
+    "pinyin": "mén"
+  },
+  "上": {
+    "pinyin": "shàng"
+  },
+  "手": {
+    "pinyin": "shǒu"
+  },
+  "雨": {
+    "pinyin": "yǔ"
+  },
+  "长": {
+    "pinyin": "cháng"
+  },
+  "日": {
+    "pinyin": "rì"
+  },
+  "石": {
+    "pinyin": "shí"
+  },
+  "正": {
+    "pinyin": "zhèng"
+  },
+  "下": {
+    "pinyin": "xìa"
+  },
+  "旦": {
+    "pinyin": "dàn"
+  },
+  "半": {
+    "pinyin": "bàn"
+  },
+  "两": {
+    "pinyin": "lǐang"
+  },
+  "公": {
+    "pinyin": "gōng"
+  },
+  "多": {
+    "pinyin": "dūo"
+  },
+  "口": {
+    "pinyin": "kǒu"
+  },
+  "山": {
+    "pinyin": "shān"
+  },
+  "东": {
+    "pinyin": "dōng"
+  },
+  "先": {
+    "pinyin": "xīan"
+  },
+  "诉": {
+    "pinyin": "sù"
+  },
+  "是": {
+    "pinyin": "shì"
+  },
+  "城": {
+    "pinyin": "chéng"
+  },
+  "场": {
+    "pinyin": "chǎng"
+  },
+  "鸟": {
+    "pinyin": "niǎo"
+  },
+  "虫": {
+    "pinyin": "chóng"
+  },
+  "子": {
+    "pinyin": "zi"
+  },
+  "火": {
+    "pinyin": "huǒ"
+  },
+  "求": {
+    "pinyin": "qiú"
+  },
+  "里": {
+    "pinyin": "lǐ"
+  },
+  "比": {
+    "pinyin": "bǐ"
+  },
+  "白": {
+    "pinyin": "bái"
+  },
+  "暖": {
+    "pinyin": "nuǎn"
+  },
+  "秀": {
+    "pinyin": "xiù"
+  },
+  "念": {
+    "pinyin": "niàn"
+  },
+  "村": {
+    "pinyin": "cūn"
+  },
+  "木": {
+    "pinyin": "mù"
+  },
+  "窗": {
+    "pinyin": "chuāng"
+  },
+  "土": {
+    "pinyin": "tǔ"
+  },
+  "月": {
+    "pinyin": "yuè"
+  },
+  "话": {
+    "pinyin": "huà"
+  },
+  "三": {
+    "pinyin": "sān"
+  },
+  "见": {
+    "pinyin": "jiàn"
+  },
+  "目": {
+    "pinyin": "mù"
+  },
+  "中": {
+    "pinyin": "zhōng"
+  },
+  "十": {
+    "pinyin": "shí"
+  },
+  "羊": {
+    "pinyin": "yáng"
+  },
+  "进": {
+    "pinyin": "jìn",
+    "categoryId": "cat_mqqfvr4miug"
+  },
+  "把": {
+    "pinyin": "bǎ"
   }
 }

@@ -172,31 +172,52 @@ class PypinyinStrategy(PinyinStrategy):
 
     @staticmethod
     def _tone3_to_symbol(py: str) -> str:
-        """将拼音中的数字声调转为符号声调（如 hao3 -> hao3 -> hǎo）"""
-        # Remove trailing number
+        """将拼音中的数字声调转为符号声调（如 hao3 -> hǎo）
+
+        声调标注标准规则：
+          1. 有 a / e → 标在该元音上
+          2. 有 ou → 标在 o 上
+          3. 否则 → 标在最后一个元音上
+        """
         match = re.match(r'^([a-zA-ZüÜ]+)(\d)$', py)
         if not match:
             return py
         letters, tone = match.group(1), match.group(2)
-        # Vowels with tone marks
+        tone_idx = int(tone) - 1
+
         vowel_map = {
             'a': 'āáǎà', 'e': 'ēéěè', 'i': 'īíǐì',
             'o': 'ōóǒò', 'u': 'ūúǔù', 'ü': 'ǖǘǚǜ',
             'A': 'ĀÁǍÀ', 'E': 'ĒÉĚÈ', 'I': 'ĪÍǏÌ',
             'O': 'ŌÓǑÒ', 'U': 'ŪÚǓÙ', 'Ü': 'ǕǗǙǛ',
         }
-        tone_idx = int(tone) - 1
-        # Mark the first vowel that can take a tone mark
-        marked = False
-        result = []
-        for ch in letters:
-            if not marked and ch in vowel_map:
-                result.append(vowel_map[ch][tone_idx])
-                marked = True
-            else:
-                result.append(ch)
-        if not marked:
+
+        def find_vowel(candidates):
+            for i, ch in enumerate(letters):
+                if ch in candidates:
+                    return i
+            return -1
+
+        # 规则1: 找 a 或 e
+        target = find_vowel(('a', 'A', 'e', 'E'))
+        # 规则2: 找 ou 组合 → 标 o
+        if target < 0:
+            for i, ch in enumerate(letters):
+                if i + 1 < len(letters) and ch in ('o', 'O') and letters[i + 1] in ('u', 'U'):
+                    target = i
+                    break
+        # 规则3: 标在最后一个元音上
+        if target < 0:
+            for i in range(len(letters) - 1, -1, -1):
+                if letters[i] in vowel_map:
+                    target = i
+                    break
+
+        if target < 0:
             return py
+
+        result = list(letters)
+        result[target] = vowel_map[letters[target]][tone_idx]
         return ''.join(result)
 
 

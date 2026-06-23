@@ -2,59 +2,1845 @@
   {
     "id": 0,
     "chars": [
-      "冬",
-      "天"
-    ],
-    "pinyin": "dōng tīan"
-  },
-  {
-    "id": 1,
-    "chars": [
       "春",
       "天"
     ],
     "pinyin": "chūn tīan"
   },
   {
+    "id": 1,
+    "chars": [
+      "喝",
+      "水"
+    ],
+    "pinyin": "hē shǔi"
+  },
+  {
+    "id": 2,
+    "chars": [
+      "开",
+      "水"
+    ],
+    "pinyin": "kāi shǔi"
+  },
+  {
+    "id": 3,
+    "chars": [
+      "主",
+      "力"
+    ],
+    "pinyin": "zhǔ lì"
+  },
+  {
     "id": 4,
     "chars": [
-      "秋",
+      "乐",
       "天"
     ],
-    "pinyin": "qīu tīan"
+    "pinyin": "lè tīan"
   },
   {
     "id": 5,
     "chars": [
-      "夏",
-      "天"
+      "书",
+      "写"
     ],
-    "pinyin": "xià tīan"
+    "pinyin": "shū xǐe"
   },
   {
     "id": 6,
     "chars": [
-      "春",
-      "夏",
-      "秋",
-      "冬"
+      "书",
+      "画"
     ],
-    "pinyin": "chūn xià qīu dōng"
+    "pinyin": "shū hùa"
   },
   {
     "id": 7,
     "chars": [
-      "春",
-      "夏"
+      "人",
+      "丁"
     ],
-    "pinyin": "chūn xià"
+    "pinyin": "rén dīng"
   },
   {
     "id": 8,
+    "chars": [
+      "人",
+      "们"
+    ],
+    "pinyin": "rén men"
+  },
+  {
+    "id": 9,
+    "chars": [
+      "人",
+      "心"
+    ],
+    "pinyin": "rén xīn"
+  },
+  {
+    "id": 10,
+    "chars": [
+      "从",
+      "小"
+    ],
+    "pinyin": "cóng xǐao"
+  },
+  {
+    "id": 11,
+    "chars": [
+      "从",
+      "来"
+    ],
+    "pinyin": "cóng lái"
+  },
+  {
+    "id": 12,
+    "chars": [
+      "他",
+      "人"
+    ],
+    "pinyin": "tā rén"
+  },
+  {
+    "id": 13,
+    "chars": [
+      "他",
+      "们"
+    ],
+    "pinyin": "tā men"
+  },
+  {
+    "id": 14,
+    "chars": [
+      "八",
+      "天"
+    ],
+    "pinyin": "bā tīan"
+  },
+  {
+    "id": 15,
+    "chars": [
+      "出",
+      "力"
+    ],
+    "pinyin": "chū lì"
+  },
+  {
+    "id": 16,
+    "chars": [
+      "出",
+      "来"
+    ],
+    "pinyin": "chū lái"
+  },
+  {
+    "id": 17,
+    "chars": [
+      "出",
+      "自"
+    ],
+    "pinyin": "chū zì"
+  },
+  {
+    "id": 18,
+    "chars": [
+      "出",
+      "走"
+    ],
+    "pinyin": "chū zǒu"
+  },
+  {
+    "id": 19,
+    "chars": [
+      "万",
+      "分"
+    ],
+    "pinyin": "wàn fēn"
+  },
+  {
+    "id": 20,
+    "chars": [
+      "万",
+      "物"
+    ],
+    "pinyin": "wàn wù"
+  },
+  {
+    "id": 21,
+    "chars": [
+      "万",
+      "象"
+    ],
+    "pinyin": "wàn xìang"
+  },
+  {
+    "id": 22,
+    "chars": [
+      "不",
+      "久"
+    ],
+    "pinyin": "bù jǐu"
+  },
+  {
+    "id": 26,
+    "chars": [
+      "不",
+      "可"
+    ],
+    "pinyin": "bù kě"
+  },
+  {
+    "id": 27,
+    "chars": [
+      "不",
+      "吃"
+    ],
+    "pinyin": "bù chī"
+  },
+  {
+    "id": 28,
+    "chars": [
+      "不",
+      "好"
+    ],
+    "pinyin": "bù hǎo"
+  },
+  {
+    "id": 29,
+    "chars": [
+      "不",
+      "安"
+    ],
+    "pinyin": "bù ān"
+  },
+  {
+    "id": 33,
+    "chars": [
+      "不",
+      "支"
+    ],
+    "pinyin": "bù zhī"
+  },
+  {
+    "id": 34,
+    "chars": [
+      "不",
+      "时"
+    ],
+    "pinyin": "bù shí"
+  },
+  {
+    "id": 35,
+    "chars": [
+      "不",
+      "止"
+    ],
+    "pinyin": "bù zhǐ"
+  },
+  {
+    "id": 36,
+    "chars": [
+      "不",
+      "知"
+    ],
+    "pinyin": "bù zhī"
+  },
+  {
+    "id": 37,
+    "chars": [
+      "不",
+      "行"
+    ],
+    "pinyin": "bù xíng"
+  },
+  {
+    "id": 39,
+    "chars": [
+      "不",
+      "语"
+    ],
+    "pinyin": "bù yǔ"
+  },
+  {
+    "id": 40,
+    "chars": [
+      "不",
+      "足"
+    ],
+    "pinyin": "bù zú"
+  },
+  {
+    "id": 43,
+    "chars": [
+      "主",
+      "义"
+    ],
+    "pinyin": "zhǔ yì"
+  },
+  {
+    "id": 44,
+    "chars": [
+      "主",
+      "人"
+    ],
+    "pinyin": "zhǔ rén"
+  },
+  {
+    "id": 45,
+    "chars": [
+      "主",
+      "动"
+    ],
+    "pinyin": "zhǔ dòng"
+  },
+  {
+    "id": 46,
+    "chars": [
+      "主",
+      "唱"
+    ],
+    "pinyin": "zhǔ chàng"
+  },
+  {
+    "id": 47,
+    "chars": [
+      "主",
+      "干"
+    ],
+    "pinyin": "zhǔ gàn"
+  },
+  {
+    "id": 48,
+    "chars": [
+      "主",
+      "打"
+    ],
+    "pinyin": "zhǔ dǎ"
+  },
+  {
+    "id": 49,
+    "chars": [
+      "主",
+      "角"
+    ],
+    "pinyin": "zhǔ jiǎo"
+  },
+  {
+    "id": 50,
+    "chars": [
+      "主",
+      "语"
+    ],
+    "pinyin": "zhǔ yǔ"
+  },
+  {
+    "id": 51,
+    "chars": [
+      "久",
+      "坐"
+    ],
+    "pinyin": "jǐu zùo"
+  },
+  {
+    "id": 52,
+    "chars": [
+      "久",
+      "远"
+    ],
+    "pinyin": "jǐu yǔan"
+  },
+  {
+    "id": 53,
+    "chars": [
+      "义",
+      "气"
+    ],
+    "pinyin": "yì qì"
+  },
+  {
+    "id": 54,
+    "chars": [
+      "义",
+      "父"
+    ],
+    "pinyin": "yì fù"
+  },
+  {
+    "id": 55,
+    "chars": [
+      "动",
+      "物"
+    ],
+    "pinyin": "dòng wù"
+  },
+  {
+    "id": 56,
+    "chars": [
+      "人",
+      "物"
+    ],
+    "pinyin": "rén wù"
+  },
+  {
+    "id": 57,
+    "chars": [
+      "造",
+      "字"
+    ],
+    "pinyin": "zào zì"
+  },
+  {
+    "id": 58,
+    "chars": [
+      "运",
+      "动"
+    ],
+    "pinyin": "yùn dòng"
+  },
+  {
+    "id": 59,
+    "chars": [
+      "运",
+      "用"
+    ],
+    "pinyin": "yùn yòng"
+  },
+  {
+    "id": 60,
+    "chars": [
+      "欢",
+      "乐"
+    ],
+    "pinyin": "hūan lè"
+  },
+  {
+    "id": 61,
+    "chars": [
+      "欢",
+      "快"
+    ],
+    "pinyin": "hūan kùai"
+  },
+  {
+    "id": 62,
+    "chars": [
+      "房",
+      "间"
+    ],
+    "pinyin": "fáng jiān"
+  },
+  {
+    "id": 63,
+    "chars": [
+      "房",
+      "门"
+    ],
+    "pinyin": "fáng mén"
+  },
+  {
+    "id": 64,
+    "chars": [
+      "上",
+      "网"
+    ],
+    "pinyin": "shàng wǎng"
+  },
+  {
+    "id": 65,
+    "chars": [
+      "对",
+      "门"
+    ],
+    "pinyin": "dùi mén"
+  },
+  {
+    "id": 66,
+    "chars": [
+      "对",
+      "方"
+    ],
+    "pinyin": "dùi fāng"
+  },
+  {
+    "id": 67,
+    "chars": [
+      "对",
+      "手"
+    ],
+    "pinyin": "dùi shǒu"
+  },
+  {
+    "id": 68,
+    "chars": [
+      "今",
+      "天"
+    ],
+    "pinyin": "jīn tīan"
+  },
+  {
+    "id": 69,
+    "chars": [
+      "古",
+      "今"
+    ],
+    "pinyin": "gǔ jīn"
+  },
+  {
+    "id": 70,
+    "chars": [
+      "大",
+      "雪"
+    ],
+    "pinyin": "dà xǔe"
+  },
+  {
+    "id": 71,
+    "chars": [
+      "风",
+      "雪"
+    ],
+    "pinyin": "fēng xǔe"
+  },
+  {
+    "id": 72,
+    "chars": [
+      "细",
+      "心"
+    ],
+    "pinyin": "xì xīn"
+  },
+  {
+    "id": 73,
+    "chars": [
+      "细",
+      "雨"
+    ],
+    "pinyin": "xì yǔ"
+  },
+  {
+    "id": 74,
+    "chars": [
+      "夕",
+      "阳"
+    ],
+    "pinyin": "xī yáng"
+  },
+  {
+    "id": 75,
+    "chars": [
+      "前",
+      "夕"
+    ],
+    "pinyin": "qían xī"
+  },
+  {
+    "id": 76,
+    "chars": [
+      "语",
+      "言"
+    ],
+    "pinyin": "yǔ yán"
+  },
+  {
+    "id": 77,
+    "chars": [
+      "语",
+      "文"
+    ],
+    "pinyin": "yǔ wén"
+  },
+  {
+    "id": 78,
+    "chars": [
+      "打",
+      "开"
+    ],
+    "pinyin": "dǎ kāi"
+  },
+  {
+    "id": 79,
+    "chars": [
+      "皮",
+      "尺"
+    ],
+    "pinyin": "pí chǐ"
+  },
+  {
+    "id": 80,
+    "chars": [
+      "皮",
+      "毛"
+    ],
+    "pinyin": "pí máo"
+  },
+  {
+    "id": 81,
+    "chars": [
+      "长",
+      "跑"
+    ],
+    "pinyin": "cháng pǎo"
+  },
+  {
+    "id": 82,
+    "chars": [
+      "快",
+      "跑"
+    ],
+    "pinyin": "kùai pǎo"
+  },
+  {
+    "id": 83,
+    "chars": [
+      "手",
+      "足"
+    ],
+    "pinyin": "shǒu zú"
+  },
+  {
+    "id": 84,
+    "chars": [
+      "沙",
+      "包"
+    ],
+    "pinyin": "shā bāo"
+  },
+  {
+    "id": 85,
+    "chars": [
+      "近",
+      "日"
+    ],
+    "pinyin": "jìn rì"
+  },
+  {
+    "id": 86,
+    "chars": [
+      "远",
+      "近"
+    ],
+    "pinyin": "yǔan jìn"
+  },
+  {
+    "id": 87,
+    "chars": [
+      "远",
+      "方"
+    ],
+    "pinyin": "yǔan fāng"
+  },
+  {
+    "id": 88,
+    "chars": [
+      "学",
+      "习"
+    ],
+    "pinyin": "xúe xí"
+  },
+  {
+    "id": 89,
+    "chars": [
+      "饱",
+      "学"
+    ],
+    "pinyin": "bǎo xúe"
+  },
+  {
+    "id": 90,
+    "chars": [
+      "玉",
+      "米"
+    ],
+    "pinyin": "yù mǐ"
+  },
+  {
+    "id": 91,
+    "chars": [
+      "玉",
+      "石"
+    ],
+    "pinyin": "yù shí"
+  },
+  {
+    "id": 92,
+    "chars": [
+      "正",
+      "义"
+    ],
+    "pinyin": "zhèng yì"
+  },
+  {
+    "id": 93,
+    "chars": [
+      "打",
+      "抱",
+      "不",
+      "平"
+    ],
+    "pinyin": "dǎ bào bù píng"
+  },
+  {
+    "id": 94,
+    "chars": [
+      "走",
+      "出"
+    ],
+    "pinyin": "zǒu chū"
+  },
+  {
+    "id": 95,
+    "chars": [
+      "走",
+      "开"
+    ],
+    "pinyin": "zǒu kāi"
+  },
+  {
+    "id": 96,
+    "chars": [
+      "河",
+      "水"
+    ],
+    "pinyin": "hé shǔi"
+  },
+  {
+    "id": 97,
+    "chars": [
+      "江",
+      "河"
+    ],
+    "pinyin": "jīang hé"
+  },
+  {
+    "id": 98,
+    "chars": [
+      "说",
+      "明"
+    ],
+    "pinyin": "shūo míng"
+  },
+  {
+    "id": 99,
+    "chars": [
+      "让",
+      "开"
+    ],
+    "pinyin": "ràng kāi"
+  },
+  {
+    "id": 100,
+    "chars": [
+      "自",
+      "主"
+    ],
+    "pinyin": "zì zhǔ"
+  },
+  {
+    "id": 101,
+    "chars": [
+      "自",
+      "大"
+    ],
+    "pinyin": "zì dà"
+  },
+  {
+    "id": 102,
+    "chars": [
+      "自",
+      "己"
+    ],
+    "pinyin": "zì jǐ"
+  },
+  {
+    "id": 103,
+    "chars": [
+      "己",
+      "方"
+    ],
+    "pinyin": "jǐ fāng"
+  },
+  {
+    "id": 104,
+    "chars": [
+      "好",
+      "人"
+    ],
+    "pinyin": "hǎo rén"
+  },
+  {
+    "id": 105,
+    "chars": [
+      "好",
+      "的"
+    ],
+    "pinyin": "hǎo de"
+  },
+  {
+    "id": 106,
+    "chars": [
+      "我",
+      "们"
+    ],
+    "pinyin": "wǒ men"
+  },
+  {
+    "id": 107,
+    "chars": [
+      "叫",
+      "走"
+    ],
+    "pinyin": "jìao zǒu"
+  },
+  {
+    "id": 108,
+    "chars": [
+      "大",
+      "叫"
+    ],
+    "pinyin": "dà jìao"
+  },
+  {
+    "id": 109,
+    "chars": [
+      "她",
+      "们"
+    ],
+    "pinyin": "tā men"
+  },
+  {
+    "id": 110,
+    "chars": [
+      "回",
+      "来"
+    ],
+    "pinyin": "húi lái"
+  },
+  {
+    "id": 111,
+    "chars": [
+      "回",
+      "头"
+    ],
+    "pinyin": "húi tóu"
+  },
+  {
+    "id": 112,
     "chars": [
       "快",
       "走"
     ],
     "pinyin": "kùai zǒu"
+  },
+  {
+    "id": 113,
+    "chars": [
+      "飞",
+      "快"
+    ],
+    "pinyin": "fēi kùai"
+  },
+  {
+    "id": 114,
+    "chars": [
+      "快",
+      "乐"
+    ],
+    "pinyin": "kùai lè"
+  },
+  {
+    "id": 115,
+    "chars": [
+      "可",
+      "乐"
+    ],
+    "pinyin": "kě lè"
+  },
+  {
+    "id": 116,
+    "chars": [
+      "当",
+      "下"
+    ],
+    "pinyin": "dāng xìa"
+  },
+  {
+    "id": 117,
+    "chars": [
+      "画",
+      "风"
+    ],
+    "pinyin": "hùa fēng"
+  },
+  {
+    "id": 118,
+    "chars": [
+      "牛",
+      "毛"
+    ],
+    "pinyin": "níu máo"
+  },
+  {
+    "id": 119,
+    "chars": [
+      "千",
+      "斤"
+    ],
+    "pinyin": "qīan jīn"
+  },
+  {
+    "id": 120,
+    "chars": [
+      "尺",
+      "寸"
+    ],
+    "pinyin": "chǐ cùn"
+  },
+  {
+    "id": 121,
+    "chars": [
+      "元",
+      "旦"
+    ],
+    "pinyin": "yúan dàn"
+  },
+  {
+    "id": 122,
+    "chars": [
+      "力",
+      "不",
+      "从",
+      "心"
+    ],
+    "pinyin": "lì bù cóng xīn"
+  },
+  {
+    "id": 123,
+    "chars": [
+      "半",
+      "斤",
+      "八",
+      "两"
+    ],
+    "pinyin": "bàn jīn bā lǐang"
+  },
+  {
+    "id": 124,
+    "chars": [
+      "公",
+      "共"
+    ],
+    "pinyin": "gōng gòng"
+  },
+  {
+    "id": 125,
+    "chars": [
+      "生",
+      "产"
+    ],
+    "pinyin": "shēng chǎn"
+  },
+  {
+    "id": 126,
+    "chars": [
+      "入",
+      "党"
+    ],
+    "pinyin": "rù dǎng"
+  },
+  {
+    "id": 127,
+    "chars": [
+      "太",
+      "多"
+    ],
+    "pinyin": "tài dūo"
+  },
+  {
+    "id": 128,
+    "chars": [
+      "太",
+      "阳"
+    ],
+    "pinyin": "tài yáng"
+  },
+  {
+    "id": 129,
+    "chars": [
+      "阳",
+      "光"
+    ],
+    "pinyin": "yáng gūang"
+  },
+  {
+    "id": 130,
+    "chars": [
+      "光",
+      "明"
+    ],
+    "pinyin": "gūang míng"
+  },
+  {
+    "id": 131,
+    "chars": [
+      "井",
+      "口"
+    ],
+    "pinyin": "jǐng kǒu"
+  },
+  {
+    "id": 132,
+    "chars": [
+      "井",
+      "水"
+    ],
+    "pinyin": "jǐng shǔi"
+  },
+  {
+    "id": 133,
+    "chars": [
+      "江",
+      "水"
+    ],
+    "pinyin": "jīang shǔi"
+  },
+  {
+    "id": 134,
+    "chars": [
+      "长",
+      "江"
+    ],
+    "pinyin": "cháng jīang"
+  },
+  {
+    "id": 135,
+    "chars": [
+      "江",
+      "山"
+    ],
+    "pinyin": "jīang shān"
+  },
+  {
+    "id": 136,
+    "chars": [
+      "住",
+      "手"
+    ],
+    "pinyin": "zhù shǒu"
+  },
+  {
+    "id": 137,
+    "chars": [
+      "住",
+      "口"
+    ],
+    "pinyin": "zhù kǒu"
+  },
+  {
+    "id": 138,
+    "chars": [
+      "上",
+      "方"
+    ],
+    "pinyin": "shàng fāng"
+  },
+  {
+    "id": 139,
+    "chars": [
+      "东",
+      "方"
+    ],
+    "pinyin": "dōng fāng"
+  },
+  {
+    "id": 140,
+    "chars": [
+      "后",
+      "来"
+    ],
+    "pinyin": "hòu lái"
+  },
+  {
+    "id": 141,
+    "chars": [
+      "先",
+      "后"
+    ],
+    "pinyin": "xīan hòu"
+  },
+  {
+    "id": 142,
+    "chars": [
+      "告",
+      "诉"
+    ],
+    "pinyin": "gào sù"
+  },
+  {
+    "id": 143,
+    "chars": [
+      "广",
+      "告"
+    ],
+    "pinyin": "gǔang gào"
+  },
+  {
+    "id": 144,
+    "chars": [
+      "是",
+      "的"
+    ],
+    "pinyin": "shì de"
+  },
+  {
+    "id": 145,
+    "chars": [
+      "多",
+      "的"
+    ],
+    "pinyin": "dūo de"
+  },
+  {
+    "id": 146,
+    "chars": [
+      "开",
+      "会"
+    ],
+    "pinyin": "kāi huì"
+  },
+  {
+    "id": 147,
+    "chars": [
+      "北",
+      "方"
+    ],
+    "pinyin": "běi fāng"
+  },
+  {
+    "id": 148,
+    "chars": [
+      "北",
+      "风"
+    ],
+    "pinyin": "běi fēng"
+  },
+  {
+    "id": 149,
+    "chars": [
+      "北",
+      "京"
+    ],
+    "pinyin": "běi jīng"
+  },
+  {
+    "id": 150,
+    "chars": [
+      "京",
+      "城"
+    ],
+    "pinyin": "jīng chéng"
+  },
+  {
+    "id": 151,
+    "chars": [
+      "广",
+      "大"
+    ],
+    "pinyin": "gǔang dà"
+  },
+  {
+    "id": 152,
+    "chars": [
+      "广",
+      "场"
+    ],
+    "pinyin": "gǔang chǎng"
+  },
+  {
+    "id": 153,
+    "chars": [
+      "写",
+      "字"
+    ],
+    "pinyin": "xǐe zì"
+  },
+  {
+    "id": 154,
+    "chars": [
+      "手",
+      "写"
+    ],
+    "pinyin": "shǒu xǐe"
+  },
+  {
+    "id": 155,
+    "chars": [
+      "认",
+      "可"
+    ],
+    "pinyin": "rèn kě"
+  },
+  {
+    "id": 156,
+    "chars": [
+      "认",
+      "出"
+    ],
+    "pinyin": "rèn chū"
+  },
+  {
+    "id": 157,
+    "chars": [
+      "方",
+      "言"
+    ],
+    "pinyin": "fāng yán"
+  },
+  {
+    "id": 158,
+    "chars": [
+      "写",
+      "出"
+    ],
+    "pinyin": "xǐe chū"
+  },
+  {
+    "id": 159,
+    "chars": [
+      "共",
+      "产",
+      "党"
+    ],
+    "pinyin": "gòng chǎn dǎng"
+  },
+  {
+    "id": 160,
+    "chars": [
+      "太",
+      "阳",
+      "光"
+    ],
+    "pinyin": "tài yáng gūang"
+  },
+  {
+    "id": 161,
+    "chars": [
+      "春",
+      "风"
+    ],
+    "pinyin": "chūn fēng"
+  },
+  {
+    "id": 162,
+    "chars": [
+      "吹",
+      "风"
+    ],
+    "pinyin": "chūi fēng"
+  },
+  {
+    "id": 163,
+    "chars": [
+      "吹",
+      "开"
+    ],
+    "pinyin": "chūi kāi"
+  },
+  {
+    "id": 164,
+    "chars": [
+      "冬",
+      "天"
+    ],
+    "pinyin": "dōng tīan"
+  },
+  {
+    "id": 165,
+    "chars": [
+      "入",
+      "冬"
+    ],
+    "pinyin": "rù dōng"
+  },
+  {
+    "id": 166,
+    "chars": [
+      "入",
+      "口"
+    ],
+    "pinyin": "rù kǒu"
+  },
+  {
+    "id": 167,
+    "chars": [
+      "开",
+      "花"
+    ],
+    "pinyin": "kāi hūa"
+  },
+  {
+    "id": 168,
+    "chars": [
+      "水",
+      "花"
+    ],
+    "pinyin": "shǔi hūa"
+  },
+  {
+    "id": 169,
+    "chars": [
+      "飞",
+      "鸟"
+    ],
+    "pinyin": "fēi niǎo"
+  },
+  {
+    "id": 170,
+    "chars": [
+      "飞",
+      "虫"
+    ],
+    "pinyin": "fēi chóng"
+  },
+  {
+    "id": 171,
+    "chars": [
+      "什",
+      "么"
+    ],
+    "pinyin": "shén me"
+  },
+  {
+    "id": 172,
+    "chars": [
+      "多",
+      "么"
+    ],
+    "pinyin": "dūo me"
+  },
+  {
+    "id": 173,
+    "chars": [
+      "古",
+      "人"
+    ],
+    "pinyin": "gǔ rén"
+  },
+  {
+    "id": 174,
+    "chars": [
+      "胡",
+      "子"
+    ],
+    "pinyin": "hú zi"
+  },
+  {
+    "id": 175,
+    "chars": [
+      "双",
+      "手"
+    ],
+    "pinyin": "shūang shǒu"
+  },
+  {
+    "id": 176,
+    "chars": [
+      "青",
+      "山"
+    ],
+    "pinyin": "qīng shān"
+  },
+  {
+    "id": 177,
+    "chars": [
+      "青",
+      "春"
+    ],
+    "pinyin": "qīng chūn"
+  },
+  {
+    "id": 178,
+    "chars": [
+      "清",
+      "水"
+    ],
+    "pinyin": "qīng shǔi"
+  },
+  {
+    "id": 179,
+    "chars": [
+      "清",
+      "风"
+    ],
+    "pinyin": "qīng fēng"
+  },
+  {
+    "id": 180,
+    "chars": [
+      "晴",
+      "天"
+    ],
+    "pinyin": "qíng tīan"
+  },
+  {
+    "id": 181,
+    "chars": [
+      "禾",
+      "苗"
+    ],
+    "pinyin": "hé míao"
+  },
+  {
+    "id": 182,
+    "chars": [
+      "火",
+      "苗"
+    ],
+    "pinyin": "huǒ míao"
+  },
+  {
+    "id": 183,
+    "chars": [
+      "请",
+      "求"
+    ],
+    "pinyin": "qǐng qiú"
+  },
+  {
+    "id": 184,
+    "chars": [
+      "生",
+      "日"
+    ],
+    "pinyin": "shēng rì"
+  },
+  {
+    "id": 185,
+    "chars": [
+      "生",
+      "字"
+    ],
+    "pinyin": "shēng zì"
+  },
+  {
+    "id": 186,
+    "chars": [
+      "文",
+      "字"
+    ],
+    "pinyin": "wén zì"
+  },
+  {
+    "id": 187,
+    "chars": [
+      "红",
+      "花"
+    ],
+    "pinyin": "hóng hūa"
+  },
+  {
+    "id": 188,
+    "chars": [
+      "动",
+      "力"
+    ],
+    "pinyin": "dòng lì"
+  },
+  {
+    "id": 189,
+    "chars": [
+      "万",
+      "里"
+    ],
+    "pinyin": "wàn lǐ"
+  },
+  {
+    "id": 190,
+    "chars": [
+      "无",
+      "人"
+    ],
+    "pinyin": "wú rén"
+  },
+  {
+    "id": 191,
+    "chars": [
+      "无",
+      "比"
+    ],
+    "pinyin": "wú bǐ"
+  },
+  {
+    "id": 192,
+    "chars": [
+      "明",
+      "天"
+    ],
+    "pinyin": "míng tīan"
+  },
+  {
+    "id": 193,
+    "chars": [
+      "明",
+      "白"
+    ],
+    "pinyin": "míng bái"
+  },
+  {
+    "id": 194,
+    "chars": [
+      "卡",
+      "片"
+    ],
+    "pinyin": "kǎ pìan"
+  },
+  {
+    "id": 195,
+    "chars": [
+      "合",
+      "力"
+    ],
+    "pinyin": "hé lì"
+  },
+  {
+    "id": 196,
+    "chars": [
+      "春",
+      "暖",
+      "花",
+      "开"
+    ],
+    "pinyin": "chūn nuǎn hūa kāi"
+  },
+  {
+    "id": 197,
+    "chars": [
+      "山",
+      "清",
+      "水",
+      "秀"
+    ],
+    "pinyin": "shān qīng shǔi xiù"
+  },
+  {
+    "id": 198,
+    "chars": [
+      "思",
+      "念"
+    ],
+    "pinyin": "sī niàn"
+  },
+  {
+    "id": 199,
+    "chars": [
+      "思",
+      "乡"
+    ],
+    "pinyin": "sī xīang"
+  },
+  {
+    "id": 200,
+    "chars": [
+      "乡",
+      "村"
+    ],
+    "pinyin": "xīang cūn"
+  },
+  {
+    "id": 201,
+    "chars": [
+      "故",
+      "乡"
+    ],
+    "pinyin": "gù xīang"
+  },
+  {
+    "id": 202,
+    "chars": [
+      "故",
+      "人"
+    ],
+    "pinyin": "gù rén"
+  },
+  {
+    "id": 203,
+    "chars": [
+      "木",
+      "床"
+    ],
+    "pinyin": "mù chúang"
+  },
+  {
+    "id": 204,
+    "chars": [
+      "窗",
+      "前"
+    ],
+    "pinyin": "chuāng qían"
+  },
+  {
+    "id": 205,
+    "chars": [
+      "前",
+      "后"
+    ],
+    "pinyin": "qían hòu"
+  },
+  {
+    "id": 206,
+    "chars": [
+      "前",
+      "方"
+    ],
+    "pinyin": "qían fāng"
+  },
+  {
+    "id": 207,
+    "chars": [
+      "大",
+      "地"
+    ],
+    "pinyin": "dà dì"
+  },
+  {
+    "id": 208,
+    "chars": [
+      "土",
+      "地"
+    ],
+    "pinyin": "tǔ dì"
+  },
+  {
+    "id": 209,
+    "chars": [
+      "月",
+      "色"
+    ],
+    "pinyin": "yuè sè"
+  },
+  {
+    "id": 210,
+    "chars": [
+      "红",
+      "色"
+    ],
+    "pinyin": "hóng sè"
+  },
+  {
+    "id": 211,
+    "chars": [
+      "打",
+      "手"
+    ],
+    "pinyin": "dǎ shǒu"
+  },
+  {
+    "id": 212,
+    "chars": [
+      "火",
+      "把"
+    ],
+    "pinyin": "huǒ bǎ"
+  },
+  {
+    "id": 213,
+    "chars": [
+      "讲",
+      "话"
+    ],
+    "pinyin": "jǐang huà"
+  },
+  {
+    "id": 214,
+    "chars": [
+      "听",
+      "讲"
+    ],
+    "pinyin": "tīng jǐang"
+  },
+  {
+    "id": 215,
+    "chars": [
+      "花",
+      "样"
+    ],
+    "pinyin": "hūa yàng"
+  },
+  {
+    "id": 216,
+    "chars": [
+      "样",
+      "子"
+    ],
+    "pinyin": "yàng zi"
+  },
+  {
+    "id": 217,
+    "chars": [
+      "大",
+      "笑"
+    ],
+    "pinyin": "dà xìao"
+  },
+  {
+    "id": 218,
+    "chars": [
+      "再",
+      "三"
+    ],
+    "pinyin": "zài sān"
+  },
+  {
+    "id": 219,
+    "chars": [
+      "再",
+      "见"
+    ],
+    "pinyin": "zài jiàn"
+  },
+  {
+    "id": 220,
+    "chars": [
+      "节",
+      "日"
+    ],
+    "pinyin": "jíe rì"
+  },
+  {
+    "id": 221,
+    "chars": [
+      "节",
+      "目"
+    ],
+    "pinyin": "jíe mù"
+  },
+  {
+    "id": 222,
+    "chars": [
+      "春",
+      "节"
+    ],
+    "pinyin": "chūn jíe"
+  },
+  {
+    "id": 223,
+    "chars": [
+      "大",
+      "米"
+    ],
+    "pinyin": "dà mǐ"
+  },
+  {
+    "id": 224,
+    "chars": [
+      "中",
+      "间"
+    ],
+    "pinyin": "zhōng jiān"
+  },
+  {
+    "id": 225,
+    "chars": [
+      "人",
+      "间"
+    ],
+    "pinyin": "rén jiān"
+  },
+  {
+    "id": 226,
+    "chars": [
+      "分",
+      "开"
+    ],
+    "pinyin": "fēn kāi"
+  },
+  {
+    "id": 227,
+    "chars": [
+      "十",
+      "分"
+    ],
+    "pinyin": "shí fēn"
+  },
+  {
+    "id": 228,
+    "chars": [
+      "小",
+      "吃"
+    ],
+    "pinyin": "xǐao chī"
+  },
+  {
+    "id": 229,
+    "chars": [
+      "吃",
+      "力"
+    ],
+    "pinyin": "chī lì"
+  },
+  {
+    "id": 230,
+    "chars": [
+      "吃",
+      "肉"
+    ],
+    "pinyin": "chī ròu"
+  },
+  {
+    "id": 231,
+    "chars": [
+      "羊",
+      "肉"
+    ],
+    "pinyin": "yáng ròu"
+  },
+  {
+    "id": 232,
+    "chars": [
+      "牛",
+      "肉"
+    ],
+    "pinyin": "níu ròu"
+  },
+  {
+    "id": 233,
+    "chars": [
+      "画",
+      "册"
+    ],
+    "pinyin": "hùa cè"
+  },
+  {
+    "id": 234,
+    "chars": [
+      "开",
+      "支"
+    ],
+    "pinyin": "kāi zhī"
+  },
+  {
+    "id": 235,
+    "chars": [
+      "手",
+      "电"
+    ],
+    "pinyin": "shǒu dìan"
+  },
+  {
+    "id": 236,
+    "chars": [
+      "上",
+      "衣"
+    ],
+    "pinyin": "shàng yī"
+  },
+  {
+    "id": 237,
+    "chars": [
+      "大",
+      "衣"
+    ],
+    "pinyin": "dà yī"
   }
 ]
