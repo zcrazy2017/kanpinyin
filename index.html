@@ -281,25 +281,127 @@
     body { background: #fff; }
     .header, .tab-nav, .main, .toast-container, .modal-overlay { display: none !important; }
     .print-area { display: block !important; }
-    @page { size: A4 portrait; margin: 12mm 14mm; }
+    @page { size: A4 portrait; margin: 12mm; }
     .print-page {
       font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
     }
-    /* 打印时田字格等比例缩放（由 JS 根据词数计算 --box / --scale） */
-    .tzg-box {
+    /* 打印田字格 Grid 布局 — 5列×N行，匹配今日出题预览卡片样式 */
+    .print-page .print-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2.5mm 2mm;
+      align-items: center;
+      justify-items: stretch;
+    }
+    .print-page .print-word-cell {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #f7fafc;
+      border-radius: 6px;
+      padding: 1.5mm 2mm;
+      border: 1px solid #e2e8f0;
+    }
+    .print-page .print-word-index {
+      font-size: 8pt;
+      color: #a0aec0;
+      min-width: 4mm;
+      text-align: right;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    /* 田字格大小由 JS 通过 --box 控制 */
+    .print-page .tzg-box {
       width: var(--box, 18mm);
       height: var(--box, 18mm);
       border-width: 1.5px;
     }
-    .tzg-char .pinyin-label {
-      font-size: calc(10pt * var(--scale, 1));
+    .print-page .tzg-char .pinyin-label {
+      font-size: calc(9.5pt * var(--scale, 1));
     }
-    .tzg-word {
-      gap: calc(2mm * var(--scale, 1));
-    }
-    .tzg-char {
+    .print-page .tzg-word {
       gap: calc(1.5mm * var(--scale, 1));
     }
+    .print-page .tzg-char {
+      gap: calc(1mm * var(--scale, 1));
+    }
+  }
+
+  /* 组词选字搜索框 */
+  .compose-search-wrap {
+    position: relative;
+    flex: 1;
+  }
+  .compose-search-wrap input {
+    width: 100%;
+    padding: 8px 14px 8px 36px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  .compose-search-wrap input:focus {
+    border-color: #667eea;
+  }
+  .compose-search-wrap .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #a0aec0;
+    pointer-events: none;
+  }
+  .compose-char-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    min-height: 36px;
+    padding: 8px;
+    background: #f7fafc;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .compose-char-list .char-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .compose-char-list .char-opt:hover {
+    border-color: #667eea;
+    background: #ebf4ff;
+  }
+  .compose-char-list .char-opt.selected {
+    border-color: #667eea;
+    background: #667eea;
+    color: #fff;
+  }
+  .compose-char-list .char-opt .pinyin-hint {
+    font-size: 11px;
+    color: #a0aec0;
+  }
+  .compose-char-list .char-opt.selected .pinyin-hint {
+    color: rgba(255,255,255,0.7);
+  }
+  .compose-char-list .empty-msg {
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    color: #a0aec0;
+    padding: 6px 0;
   }
 </style>
 </head>
@@ -373,6 +475,17 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== Saved Practices Section ===== -->
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📦 已保存的练习</span>
+        <span style="font-size:12px;color:#a0aec0;font-weight:400;">保存后可随时加载，不受刷新影响</span>
+      </div>
+      <div id="savedPracticesList">
+        <p class="empty-msg">暂无保存的练习。</p>
+      </div>
+    </div>
   </div>
 
   <!-- ===== Library Panel ===== -->
@@ -403,10 +516,7 @@
         <div id="categoryTree" style="font-size:14px; min-height:20px;">
           <p class="empty-msg">暂无分类</p>
         </div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="btn btn-ghost btn-sm" onclick="saveFile('categories')">💾 保存分类到文件</button>
-          <button class="btn btn-ghost btn-sm" onclick="loadFile('categories')">📂 从文件加载分类</button>
-        </div>
+        <!-- 分类数据自动保存/加载，无需手动按钮 -->
         <!-- 点击分类后：显示不属于该分类的字，带搜索过滤 -->
         <div id="categoryAddCharsArea" style="display:none;margin-top:12px;padding:12px;background:#f0f5ff;border-radius:10px;border:2px solid #667eea;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
@@ -471,8 +581,12 @@
             <span style="display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#667eea; color:#fff; font-size:12px; font-weight:700;">A</span>选字自动组合</h4>
           <p style="font-size:14px; color:#718096; margin-bottom:10px;">选择一个字，自动列出正确的两字词语。已存在的词不显示。</p>
           <div class="form-row"><label>选字</label>
-            <select id="composeCharSelect" style="padding:8px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;"><option value="">— 请先添加字 —</option></select>
+            <div class="compose-search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="composeSearchInput" placeholder="搜索字..." autocomplete="off" oninput="onComposeSearchInput()">
+            </div>
           </div>
+          <div id="composeCharList" class="compose-char-list"><p class="empty-msg">— 请先添加字 —</p></div>
           <div id="composeResults"><p class="empty-msg">选择一个字后显示可组成的词语。</p></div>
         </div>
         <div>
@@ -652,6 +766,22 @@
   </div>
 </div>
 
+<!-- ==================== Save Practice Modal ==================== -->
+<div class="modal-overlay" id="savePracticeModal">
+  <div class="modal">
+    <h3>💾 保存练习</h3>
+    <div style="font-size:13px;color:#718096;margin-bottom:12px;">为当前练习命名，保存后可随时加载使用。</div>
+    <div class="form-row">
+      <label>名称</label>
+      <input type="text" id="savePracticeNameInput" placeholder="如：一年级上册复习" style="flex:1;" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('savePracticeModal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="confirmSavePractice()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== JavaScript ==================== -->
 <script>
 // ============================================================
@@ -789,7 +919,12 @@ async function autoLoadDataFiles() {
       if (resp.ok && result.data !== null && result.data !== undefined) {
         const loaded = result.data;
         if (type === 'dict') {
-          Object.assign(appData.dict, loaded);
+          // 仅补充字库中缺失的字，不覆盖用户已修改的内容（如拼音修正）
+          Object.entries(loaded).forEach(([ch, info]) => {
+            if (!appData.dict[ch]) {
+              appData.dict[ch] = info;
+            }
+          });
         } else if (type === 'words') {
           const existingIds = new Set(appData.words.map(w => w.id));
           loaded.forEach(w => {
@@ -799,7 +934,10 @@ async function autoLoadDataFiles() {
             }
           });
         } else if (type === 'categories') {
-          appData.categories = loaded;
+          // 仅当 localStorage 中无分类数据时才从文件加载
+          if (!appData.categories || appData.categories.length === 0) {
+            appData.categories = loaded;
+          }
         }
         saveData(appData);
       }
@@ -809,6 +947,23 @@ async function autoLoadDataFiles() {
   }
   refreshAll();
   renderDict();
+}
+
+// 静默加载分类数据（切换到分类管理tab时自动调用）
+// 始终从文件加载，文件是权威数据源
+async function autoLoadCategoriesSilently() {
+  try {
+    const resp = await fetch(`${DATA_API}/load/categories`);
+    const result = await resp.json();
+    if (resp.ok && result.data !== null && result.data !== undefined) {
+      appData.categories = result.data;
+      saveData(appData);
+      refreshCategoryTreeOnly();
+      renderCategoryBrowse();
+    }
+  } catch (e) {
+    // 静默失败，后端不可用时不影响使用
+  }
 }
 
 // ============================================================
@@ -1021,18 +1176,53 @@ function removeWord(wordId) {
 // ============================================================
 //  WORD COMPOSITION
 // ============================================================
-async function refreshComposeSelect() {
-  const sel = document.getElementById('composeCharSelect');
-  const currentValue = sel.value;
-  sel.innerHTML = '<option value="">⏳ 正在筛选可组词的字...</option>';
+let _composableChars = [];    // 缓存的全部可组词字列表
+let _selectedComposeChar = ''; // 当前选中的字
 
-  const chars = Object.keys(appData.dict).sort();
-  if (chars.length < 2) {
-    sel.innerHTML = '<option value="">— 请至少添加2个字 —</option>';
+function renderComposeCharList(filterText) {
+  const list = document.getElementById('composeCharList');
+  const filtered = filterText
+    ? _composableChars.filter(ch => ch.includes(filterText))
+    : _composableChars;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<p class="empty-msg">${filterText ? '没有匹配的字' : '— 暂无字可组词 —'}</p>`;
     return;
   }
 
-  let composableChars = chars;
+  list.innerHTML = filtered.map(ch => {
+    const hint = appData.dict[ch]?.pinyin || '';
+    const selected = ch === _selectedComposeChar ? ' selected' : '';
+    return `<span class="char-opt${selected}" data-ch="${ch}" onclick="selectComposeChar('${ch}')">${ch} <span class="pinyin-hint">${hint}</span></span>`;
+  }).join('');
+}
+
+function onComposeSearchInput() {
+  renderComposeCharList(document.getElementById('composeSearchInput').value.trim());
+}
+
+function selectComposeChar(ch) {
+  _selectedComposeChar = ch;
+  document.getElementById('composeSearchInput').value = '';
+  renderComposeCharList('');
+  onComposeCharChange(ch);
+}
+
+async function refreshComposeSelect() {
+  const searchInput = document.getElementById('composeSearchInput');
+  const list = document.getElementById('composeCharList');
+  searchInput.value = '';
+  list.innerHTML = '<p class="empty-msg">⏳ 正在筛选可组词的字...</p>';
+
+  const chars = Object.keys(appData.dict).sort();
+  if (chars.length < 2) {
+    list.innerHTML = '<p class="empty-msg">— 请至少添加2个字 —</p>';
+    _composableChars = [];
+    _selectedComposeChar = '';
+    return;
+  }
+
+  _composableChars = chars;
 
   // 尝试从后端获取可组词的字列表
   try {
@@ -1041,7 +1231,7 @@ async function refreshComposeSelect() {
     if (resp.ok) {
       const data = await resp.json();
       if (data.composable && data.composable.length > 0) {
-        composableChars = data.composable;
+        _composableChars = data.composable;
       }
     }
   } catch (e) {
@@ -1049,29 +1239,15 @@ async function refreshComposeSelect() {
     console.warn('Composable API unavailable, showing all chars', e);
   }
 
-  sel.innerHTML = '<option value="">— 选择字 —</option>';
-  composableChars.forEach(ch => {
-    const opt = document.createElement('option');
-    opt.value = ch;
-    const hint = appData.dict[ch]?.pinyin || '';
-    opt.textContent = `${ch} (${hint})`;
-    sel.appendChild(opt);
-  });
-
-  // 如果当前选中的字仍在可组词列表中，保留选择
-  if (currentValue && composableChars.includes(currentValue)) {
-    sel.value = currentValue;
+  // 如果当前选中的字仍在列表中，保留选择
+  if (_selectedComposeChar && !_composableChars.includes(_selectedComposeChar)) {
+    _selectedComposeChar = '';
   }
 
-  // 如果没有可组词的字
-  if (composableChars.length === 0) {
-    sel.innerHTML = '<option value="">— 暂无字可组词 —</option>';
-  }
+  renderComposeCharList('');
 }
 
-async function onComposeCharChange() {
-  const sel = document.getElementById('composeCharSelect');
-  const ch = sel.value;
+async function onComposeCharChange(ch) {
   const container = document.getElementById('composeResults');
   if (!ch) {
     container.innerHTML = '<p class="empty-msg">选择一个字后显示可组成的词语。</p>';
@@ -1487,7 +1663,7 @@ function removeCategoryNode(nodes, id) {
   return false;
 }
 
-function addCategory() {
+async function addCategory() {
   const nameInput = document.getElementById('categoryNameInput');
   const parentSelect = document.getElementById('categoryParentSelect');
   const name = nameInput.value.trim();
@@ -1512,12 +1688,13 @@ function addCategory() {
 
   nameInput.value = '';
   saveData(appData);
+  await saveFile('categories'); // 自动保存到文件
   toast(`已添加分类「${name}」`);
   refreshLibrary();
   nameInput.focus();
 }
 
-function removeCategory(id) {
+async function removeCategory(id) {
   if (!confirm('确定删除此分类及所有子分类吗？（字和词不受影响）')) return;
   removeCategoryNode(appData.categories, id);
   // 清除字和词中的分类引用
@@ -1528,6 +1705,8 @@ function removeCategory(id) {
     if (w.categoryId === id) w.categoryId = '';
   });
   saveData(appData);
+  await saveFile('categories');
+  await saveFile('dict'); // 保存字库，确保 categoryId 更新持久化
   toast('已删除分类');
   refreshLibrary();
 }
@@ -1661,6 +1840,8 @@ async function confirmAddCharsToCategory() {
   });
 
   saveData(appData);
+  await saveFile('categories');
+  await saveFile('dict'); // 保存字库，确保 categoryId 持久化
   toast(`已将 ${checkboxes.length} 个字加入「${catName}」`);
   // 刷新分类树，并重新显示当前分类的面板
   const keepCatId = _activeAddCatId;
@@ -1770,6 +1951,7 @@ function confirmEditCharCategory() {
   if (info) {
     info.categoryId = newCatId || undefined;
     saveData(appData);
+    saveFile('dict'); // 保存字库，确保 categoryId 持久化
     toast(`已更新「${ch}」的分类`);
     refreshLibrary();
   }
@@ -1855,7 +2037,11 @@ function switchLibTab(tab) {
     p.classList.toggle('active', p.id === 'libpanel-' + tab);
     p.style.display = p.id === 'libpanel-' + tab ? 'block' : 'none';
   });
-  if (tab === 'cat') renderCategoryBrowse();
+  if (tab === 'cat') {
+    renderCategoryBrowse();
+    // 自动从文件加载分类数据
+    autoLoadCategoriesSilently();
+  }
   if (tab === 'chars') refreshLibrary();
 }
 
@@ -1871,9 +2057,10 @@ function renderCategoryBrowse(catId, catName) {
     return;
   }
 
-  // 获取该分类下所有字（不含子分类）
+  // 获取该分类及其所有子分类下的字
+  const expandedIds = getCategoryAndDescendantIds(catId);
   const chars = Object.entries(appData.dict)
-    .filter(([ch, info]) => info.categoryId === catId)
+    .filter(([ch, info]) => info.categoryId && expandedIds.has(info.categoryId))
     .sort((a, b) => a[0].localeCompare(b[0], 'zh'));
 
   let html = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
@@ -1911,6 +2098,7 @@ async function removeCharFromCategory(ch) {
   if (!confirmed) return;
   appData.dict[ch].categoryId = undefined;
   saveData(appData);
+  saveFile('dict'); // 保存字库，确保 categoryId 持久化
   toast(`「${ch}」已移出分类`);
   refreshLibrary();
   if (_activeAddCatId) {
@@ -1961,6 +2149,7 @@ async function resetAllCategoryAssign() {
   if (!confirmed) return;
   Object.values(appData.dict).forEach(d => { d.categoryId = undefined; });
   saveData(appData);
+  saveFile('dict'); // 保存字库，确保 categoryId 持久化
   toast(`已清除 ${catCount} 个字的分类`);
   refreshLibrary();
   renderDict();
@@ -2017,16 +2206,48 @@ function shuffle(arr) {
   return a;
 }
 
+// 获取某分类ID及其所有子分类ID的集合
+// 子类的字也属于父类，例如"一年级下/第七单元"的字也属于"一年级下"
+function getCategoryAndDescendantIds(catId) {
+  const result = new Set([catId]);
+  function collectDescendants(node) {
+    if (node && node.children) {
+      node.children.forEach(child => {
+        result.add(child.id);
+        collectDescendants(child);
+      });
+    }
+  }
+  function findNode(nodes) {
+    if (!nodes) return false;
+    for (const n of nodes) {
+      if (n.id === catId) {
+        collectDescendants(n);
+        return true;
+      }
+      if (n.children && findNode(n.children)) return true;
+    }
+    return false;
+  }
+  findNode(appData.categories);
+  return result;
+}
+
 function getFilteredWords() {
   // 按选中的分类筛选词库
   if (!_selectedCategoryIds || _selectedCategoryIds.length === 0) {
     return appData.words; // 未选分类则返回全部
   }
+  // 展开选中分类的所有子分类ID（子类也属于父类）
+  const expandedIds = new Set();
+  _selectedCategoryIds.forEach(catId => {
+    getCategoryAndDescendantIds(catId).forEach(id => expandedIds.add(id));
+  });
   return appData.words.filter(w => {
-    // 词中每个字都要在选中的分类中
+    // 词中每个字都要在选中的分类或其子分类中
     return w.chars.every(ch => {
       const info = appData.dict[ch];
-      return info && info.categoryId && _selectedCategoryIds.includes(info.categoryId);
+      return info && info.categoryId && expandedIds.has(info.categoryId);
     });
   });
 }
@@ -2203,9 +2424,10 @@ function renderDict() {
   renderDictCategoryFilter();
 
   let entries = Object.entries(appData.dict).sort((a, b) => a[0].localeCompare(b[0], 'zh'));
-  // 按分类过滤
+  // 按分类过滤（子类的字也属于父类）
   if (_dictCategoryFilter) {
-    entries = entries.filter(([ch, info]) => info.categoryId === _dictCategoryFilter);
+    const expandedIds = getCategoryAndDescendantIds(_dictCategoryFilter);
+    entries = entries.filter(([ch, info]) => info.categoryId && expandedIds.has(info.categoryId));
   }
   if (entries.length === 0) {
     document.getElementById('dictCharList').innerHTML = '<p class="empty-msg">暂无字库，请先在字词管理中导入汉字</p>';
@@ -2724,6 +2946,7 @@ function refreshPractice() {
     actionsEl.innerHTML = `
       <button class="btn btn-primary" onclick="printPractice()">🖨️ 打印</button>
       <button class="btn btn-warning" onclick="showCorrection()">✏️ 批改</button>
+      <button class="btn btn-success" onclick="showSavePracticeModal()">💾 保存练习</button>
       <button class="btn btn-outline" onclick="regeneratePractice()">🔄 重新出题</button>
     `;
     previewEl.innerHTML = renderPracticePreview(words);
@@ -2745,6 +2968,7 @@ function refreshPractice() {
     actionsEl.innerHTML = `
       <button class="btn btn-primary" onclick="printPractice()">🖨️ 打印</button>
       <button class="btn btn-warning" onclick="showCorrection()">✏️ 批改</button>
+      <button class="btn btn-success" onclick="showSavePracticeModal()">💾 保存练习</button>
       <button class="btn btn-outline" onclick="regeneratePractice()">🔄 重新出题</button>
     `;
     previewEl.innerHTML = renderPracticePreview(words);
@@ -2764,6 +2988,9 @@ function refreshPractice() {
     previewEl.innerHTML = '<p class="empty-msg">点击「生成今日练习」开始。</p>';
     correctEl.style.display = 'none';
   }
+
+  // 渲染已保存练习列表
+  renderSavedPractices();
 }
 
 function buildTzgWordHtml(word) {
@@ -2971,39 +3198,217 @@ function submitCorrection() {
 }
 
 // ============================================================
+//  SAVED PRACTICES — 保存/加载/删除练习（持久化到 localStorage）
+// ============================================================
+const SAVED_PRACTICES_KEY = 'kanpinyin_saved_practices';
+
+function getSavedPractices() {
+  try {
+    const raw = localStorage.getItem(SAVED_PRACTICES_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data)) return data;
+    }
+  } catch (e) { /* ignore */ }
+  return [];
+}
+
+function savePracticesToStorage(practices) {
+  try {
+    localStorage.setItem(SAVED_PRACTICES_KEY, JSON.stringify(practices));
+  } catch (e) {
+    toast('保存失败：存储空间不足', 'error');
+  }
+}
+
+// 打开保存练习命名弹窗
+function showSavePracticeModal() {
+  const words = window._currentPractice;
+  if (!words || words.length === 0) {
+    toast('没有练习可保存，请先生成练习', 'error');
+    return;
+  }
+  const input = document.getElementById('savePracticeNameInput');
+  // 默认名称：当前日期 + 词数
+  const today = new Date().toISOString().slice(0, 10);
+  input.value = `练习 ${today}（${words.length}词）`;
+  document.getElementById('savePracticeModal').classList.add('show');
+  setTimeout(() => input.focus(), 100);
+}
+
+// 确认保存练习
+function confirmSavePractice() {
+  const input = document.getElementById('savePracticeNameInput');
+  const name = input.value.trim();
+  if (!name) {
+    toast('请输入练习名称', 'error');
+    return;
+  }
+
+  const words = window._currentPractice;
+  if (!words || words.length === 0) {
+    toast('没有练习可保存', 'error');
+    return;
+  }
+
+  const practices = getSavedPractices();
+
+  // 检查同名是否已存在
+  const existing = practices.find(p => p.name === name);
+  if (existing) {
+    toast(`已存在同名练习「${name}」`, 'info');
+    document.getElementById('savePracticeModal').classList.remove('show');
+    return;
+  }
+
+  const newPractice = {
+    id: 'sp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: name,
+    createdAt: new Date().toISOString(),
+    words: words.map(w => ({
+      wordId: w.wordId,
+      chars: [...w.chars],
+      pinyin: w.pinyin
+    }))
+  };
+
+  practices.push(newPractice);
+  savePracticesToStorage(practices);
+  document.getElementById('savePracticeModal').classList.remove('show');
+  toast(`✅ 已保存练习「${name}」`);
+  renderSavedPractices();
+}
+
+// 加载保存的练习
+async function loadSavedPractice(id) {
+  const practices = getSavedPractices();
+  const saved = practices.find(p => p.id === id);
+  if (!saved) {
+    toast('未找到该练习', 'error');
+    return;
+  }
+
+  const confirmed = await showConfirm(`确定加载保存的练习「${saved.name}」吗？\n当前未保存的练习将被替换。`);
+  if (!confirmed) return;
+
+  window._currentPractice = saved.words.map(w => ({
+    wordId: w.wordId,
+    chars: [...w.chars],
+    pinyin: w.pinyin
+  }));
+
+  toast(`📂 已加载练习「${saved.name}」`);
+  refreshPractice();
+}
+
+// 删除保存的练习
+async function deleteSavedPractice(id) {
+  const practices = getSavedPractices();
+  const saved = practices.find(p => p.id === id);
+  if (!saved) return;
+
+  const confirmed = await showConfirm(`确定删除保存的练习「${saved.name}」吗？此操作不可撤销。`);
+  if (!confirmed) return;
+
+  const updated = practices.filter(p => p.id !== id);
+  savePracticesToStorage(updated);
+  toast(`已删除练习「${saved.name}」`);
+  renderSavedPractices();
+}
+
+// 渲染已保存练习列表
+function renderSavedPractices() {
+  const container = document.getElementById('savedPracticesList');
+  if (!container) return;
+
+  const practices = getSavedPractices();
+
+  if (practices.length === 0) {
+    container.innerHTML = '<p class="empty-msg">暂无保存的练习。生成练习后点击「💾 保存练习」即可保存。</p>';
+    return;
+  }
+
+  // 按创建时间倒序
+  practices.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+  practices.forEach(p => {
+    const date = p.createdAt.slice(0, 10);
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;
+              background:#f7fafc;border-radius:10px;flex-wrap:wrap;
+              border:1px solid #e2e8f0;transition:all 0.15s;">
+      <span style="font-weight:600;flex:1;min-width:120px;">📄 ${p.name}</span>
+      <span style="font-size:12px;color:#a0aec0;">📅 ${date}</span>
+      <span style="font-size:12px;color:#a0aec0;">📝 ${p.words.length} 词</span>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-primary btn-sm" onclick="loadSavedPractice('${p.id}')">📂 加载</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSavedPractice('${p.id}')">🗑️ 删除</button>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ============================================================
 //  PRINT
 // ============================================================
 function printPractice() {
-  const student = ensureStudent();
-  const today = new Date().toISOString().slice(0, 10);
-
-  // 直接从内存获取当前练习（不再保存到 practiceLog）
   const words = window._currentPractice;
   if (!words || words.length === 0) { toast('没有练习可打印', 'error'); return; }
 
-  // 等比例缩放：根据 A4 纸宽度和词数计算最优田字格大小
-  // A4=210mm, @page 左右边距 14mm, 可用宽度 ≈ 182mm
-  // 每个卡片: padding(10px*2≈7mm) + 编号(13px≈4.6mm) + gap(6px≈2.1mm) + 田字格(2*box+gap 2mm)
-  // = 2*box + 15.7mm, 卡片间距 16px≈5.6mm
-  const targetCols = words.length <= 8 ? 3 : words.length <= 15 ? 4 : 5;
-  const boxSize = Math.max(10, Math.min(16,
-    Math.floor(((182 - (targetCols - 1) * 5.6) / targetCols - 15.7) / 2 * 10) / 10
-  ));
-  // 相对默认 18mm 的缩放比例
-  const scale = (boxSize / 18).toFixed(3);
+  // ===== 计算最优田字格大小（横向最大化） =====
+  // A4=210mm, @page 边距 12mm, 可用宽度 ≈ 186mm
+  const COLS = 5;
+  const AVAIL_WIDTH = 186; // mm
+  const COL_GAP = 2; // mm 列间距
+  const CHAR_GAP = 1.5; // mm 词中两个田字格之间的间隙
+  const IDX_W = 4; // mm 序号占用宽度
+  const CELL_PAD_H = 4; // mm 卡片水平方向左右padding总和
 
-  let html = `<div class="print-page" style="--box: ${boxSize}mm; --scale: ${scale};">`;
-  html += '<div style="display:flex; flex-wrap:wrap; gap:12px 16px; justify-content:center; padding:12px 0;">';
-  html += '<div style="display:flex; flex-wrap:wrap; gap:12px 16px; justify-content:center; padding:12px 0;">';
-  words.forEach((w, i) => {
-    html += `<div style="display:flex; align-items:center; gap:6px; background:#f7fafc; border-radius:10px; padding:6px 10px; border:1px solid #e2e8f0;">
-      <span style="color:#a0aec0; font-size:13px; min-width:20px;">${i + 1}.</span>
-      ${buildTzgWordHtml(w)}
-    </div>`;
-  });
-  html += '</div></div>';
+  // 每列内容区宽度 = (总宽 - 总列间距) / 列数 - 卡片padding
+  const colContent = (AVAIL_WIDTH - (COLS - 1) * COL_GAP) / COLS - CELL_PAD_H;
+  // 内容区 = 序号 + gap(4px≈1.4mm) + 2个田字格 + 字间gap
+  let boxSize = (colContent - IDX_W - 1.4 - CHAR_GAP) / 2;
+  boxSize = Math.max(12, Math.min(22, Math.round(boxSize * 2) / 2));
 
-  document.getElementById('printArea').innerHTML = html;
+  const scaleVal = boxSize / 18;
+  const scale = scaleVal.toFixed(3);
+
+  // ===== 计算每页行数（纵向充分利用） =====
+  // A4=297mm, @page 边距 12mm, 可用高度 ≈ 273mm
+  // 每行卡片高度 ≈ pinyin行高(≈3mm) + gap(1mm*scale) + box + 卡片上下padding(3mm)
+  const rowH = (3 + 1 * scaleVal + boxSize) + 3; // mm
+  const ROW_GAP = 2.5; // mm 行间距
+  const AVAIL_HEIGHT = 273; // mm
+  const ROWS = Math.max(3, Math.floor((AVAIL_HEIGHT + ROW_GAP) / (rowH + ROW_GAP)));
+  const PER_PAGE = COLS * ROWS;
+
+  // ===== 分页构建 Grid 布局 =====
+  let fullHtml = '';
+  for (let pageStart = 0; pageStart < words.length; pageStart += PER_PAGE) {
+    const pageWords = words.slice(pageStart, pageStart + PER_PAGE);
+    const needBreak = pageStart + PER_PAGE < words.length;
+    fullHtml += `<div class="print-page" style="${needBreak ? 'page-break-after:always;' : ''} --box:${boxSize}mm; --scale:${scale};">`;
+    fullHtml += '<div class="print-grid" style="grid-template-rows:repeat(' + ROWS + ', auto);">';
+
+    pageWords.forEach((w, wi) => {
+      const idx = pageStart + wi + 1;
+      fullHtml += `<div class="print-word-cell">
+        <span class="print-word-index">${idx}.</span>
+        ${buildTzgWordHtml(w)}
+      </div>`;
+    });
+
+    // 补齐空单元格保持网格对齐
+    for (let j = pageWords.length; j < PER_PAGE; j++) {
+      fullHtml += '<div class="print-word-cell" style="visibility:hidden;"></div>';
+    }
+
+    fullHtml += '</div></div>';
+  }
+
+  document.getElementById('printArea').innerHTML = fullHtml;
   setTimeout(() => window.print(), 200);
 }
 
@@ -3220,9 +3625,9 @@ document.getElementById('pinyinInput').addEventListener('input', function() {
 document.getElementById('renameStudentInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmRenameStudent();
 });
-
-// Compose char select change
-document.getElementById('composeCharSelect').addEventListener('change', onComposeCharChange);
+document.getElementById('savePracticeNameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmSavePractice();
+});
 
 // 初始化学生（不存在则创建默认）
 getCurrentStudent();
@@ -3292,6 +3697,7 @@ async function autoConnectBackend() {
 loadSettings();
 ensureStudent();
 refreshAll();
+renderSavedPractices();
 
 // Auto-connect backend + 自动加载数据文件
 autoConnectBackend().then(() => {
