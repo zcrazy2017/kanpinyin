@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>看拼音写词语 · 智能练习系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
   /* ========== Reset & Base ========== */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,12 +30,7 @@
     backdrop-filter: blur(4px);
   }
   .header-controls select option { color: #1a202c; background: #fff; }
-  .btn-student-add {
-    background: rgba(255,255,255,0.2); border: 1px dashed rgba(255,255,255,0.5);
-    color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer;
-    font-size: 13px; transition: all 0.2s;
-  }
-  .btn-student-add:hover { background: rgba(255,255,255,0.35); }
+
 
   /* ========== Tab Nav ========== */
   .tab-nav {
@@ -140,21 +136,6 @@
   .practice-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
 
   /* ========== Correction Mode ========== */
-  .correct-list { display: flex; flex-direction: column; gap: 6px; }
-  .correct-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 16px; background: #f7fafc; border-radius: 10px;
-    border: 2px solid transparent; transition: all 0.15s;
-  }
-  .correct-item .word-info { font-size: 16px; }
-  .correct-item .word-info .pinyin { color: #667eea; font-weight: 500; margin-right: 12px; }
-  .correct-item .word-info .hanzi { color: #a0aec0; }
-  .correct-actions { display: flex; gap: 6px; }
-  .btn-correct { min-width: 44px; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; }
-  .btn-correct.right { background: #c6f6d5; color: #276749; border: 2px solid #9ae6b4; }
-  .btn-correct.right.active { background: #48bb78; color: #fff; border-color: #48bb78; }
-  .btn-correct.wrong { background: #fed7d7; color: #9b2c2c; border: 2px solid #feb2b2; }
-  .btn-correct.wrong.active { background: #fc8181; color: #fff; border-color: #fc8181; }
 
   /* ========== Char/Word Management ========== */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -259,6 +240,43 @@
     pointer-events: none;
   }
 
+  /* ===== 批改模式 — 田字格内显示字，可点击标记错误 ===== */
+  /* ===== 批改模式：答案字填入预览田字格 ===== */
+  .tzg-box.with-answer {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+  }
+  .tzg-box.with-answer .tzg-char-text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    opacity: 0.4;
+    color: #a0aec0;
+    font-size: 24pt;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .tzg-box.with-answer.wrong {
+    background: rgba(252, 129, 129, 0.2);
+    border-color: #fc8181;
+    border-width: 2px;
+  }
+  .tzg-box.with-answer.wrong .tzg-char-text {
+    opacity: 1;
+    color: #c53030;
+  }
+  .tzg-box.with-answer:hover {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102,126,234,0.2);
+  }
+  .tzg-box.with-answer.wrong:hover {
+    border-color: #e53e3e;
+    box-shadow: 0 0 0 2px rgba(229,62,62,0.2);
+  }
+
   @media print {
     body { background: #fff; }
     .header, .tab-nav, .main, .toast-container, .modal-overlay { display: none !important; }
@@ -291,14 +309,14 @@
 <header class="header">
   <h1><span>📖</span> 看拼音写词语 · 智能练习系统</h1>
   <div class="header-controls">
-    <label for="studentSelect">👤 学生</label>
-    <select id="studentSelect"></select>
-    <button class="btn-student-add" onclick="showAddStudentModal()">➕ 添加</button>
+    <span style="display:inline-flex;align-items:center;gap:8px;color:#fff;font-size:14px;">
+      👤 <span id="studentNameDisplay" style="font-weight:600;">同学</span>
+      <span onclick="renameStudent()" style="cursor:pointer;font-size:12px;opacity:0.7;border-bottom:1px dashed rgba(255,255,255,0.4);">✎ 改名</span>
+    </span>
     <span id="backendStatus" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,0.15);">
       <span class="status-dot" style="width:8px;height:8px;border-radius:50%;background:#aaa;display:inline-block;"></span>
       <span class="status-text">后端...</span>
     </span>
-    <span class="btn-student-add" onclick="saveFile('students')" title="保存学生数据到JSON文件" style="cursor:pointer;font-size:12px;">💾 保存学生</span>
   </div>
 </header>
 
@@ -308,6 +326,7 @@
   <button class="tab-btn" data-tab="library" onclick="switchTab('library')">📚 字库管理</button>
   <button class="tab-btn" data-tab="history" onclick="switchTab('history')">📊 历史记录</button>
   <button class="tab-btn" data-tab="dict" onclick="switchTab('dict')">📖 字典</button>
+  <button class="tab-btn" data-tab="stats" onclick="switchTab('stats')">📈 统计</button>
 </nav>
 
 <!-- ==================== Main Content ==================== -->
@@ -345,11 +364,11 @@
           <hr style="border: none; border-top: 2px dashed #e2e8f0; margin: 20px 0;">
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
             <span style="font-size:18px; font-weight:600;">✏️ 批改</span>
-            <span style="font-size:13px; color:#718096;">仅标记写错的字（默认全对），点击字切换错误标记</span>
+            <span style="font-size:13px; color:#718096;">田字格中显示正确答案，点击字切换错误标记（红色=写错）</span>
           </div>
-          <div class="correct-list" id="correctList"></div>
           <div style="margin-top:16px;">
             <button class="btn btn-success" onclick="submitCorrection()">📊 提交批改结果</button>
+            <button class="btn btn-ghost" onclick="cancelCorrection()" style="margin-left:8px;">取消</button>
           </div>
         </div>
       </div>
@@ -501,7 +520,7 @@
     <div class="card">
       <div class="card-title">📊 历史记录</div>
       <div id="historySummary" style="font-size:14px;color:#718096;margin-bottom:12px;">
-        选择一个学生查看历史练习统计。
+        查看历史练习统计。
       </div>
       <div id="historyStats" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;"></div>
     </div>
@@ -539,6 +558,12 @@
                    border:2px solid #667eea;background:#ebf4ff;color:#667eea;font-weight:600;">全部</span>
         </div>
       </div>
+      <!-- 矫正拼音 -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:500;color:#4a5568;">🔧 矫正拼音</span>
+        <button class="btn btn-warning btn-sm" onclick="refreshAllPinyin()">🔄 一键矫正所有拼音音调</button>
+        <span style="font-size:12px;color:#a0aec0;">通过后端API自动修正所有字的拼音音调标注</span>
+      </div>
       <!-- 字母导航 -->
       <div id="dictLetterBar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;padding:8px 0;border-bottom:2px solid #e2e8f0;">
       </div>
@@ -546,6 +571,33 @@
       <div id="dictCharList">
         <p class="empty-msg">暂无字库，请先在字词管理中导入汉字</p>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== Stats Panel ===== -->
+  <div class="panel" id="panel-stats">
+    <div class="card">
+      <div class="card-title">📈 成绩统计</div>
+      <div style="margin-bottom:12px;font-size:13px;color:#718096;">
+        查看历史练习成绩趋势，横坐标为日期，纵坐标为正确率。
+      </div>
+      <!-- 日期范围选择 -->
+      <div class="form-row" style="margin-bottom:16px;">
+        <label for="statsStartDate">从</label>
+        <input type="date" id="statsStartDate" style="padding:6px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;">
+        <label for="statsEndDate">至</label>
+        <input type="date" id="statsEndDate" style="padding:6px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;">
+        <button class="btn btn-primary btn-sm" onclick="renderStatsChart()">🔄 更新</button>
+        <button class="btn btn-ghost btn-sm" onclick="setStatsLastMonth()">近一月</button>
+        <button class="btn btn-ghost btn-sm" onclick="setStatsLastWeek()">近一周</button>
+        <button class="btn btn-ghost btn-sm" onclick="setStatsAll()">全部</button>
+      </div>
+      <!-- 图表容器 -->
+      <div id="statsChart" style="width:100%;height:400px;background:#fafbfc;border-radius:12px;border:1px solid #e2e8f0;">
+        <p class="empty-msg">暂无练习数据</p>
+      </div>
+      <!-- 统计摘要 -->
+      <div id="statsSummary" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;"></div>
     </div>
   </div>
 
@@ -585,17 +637,17 @@
   </div>
 </div>
 
-<!-- ==================== Add Student Modal ==================== -->
-<div class="modal-overlay" id="addStudentModal">
+<!-- ==================== Rename Student Modal ==================== -->
+<div class="modal-overlay" id="renameStudentModal">
   <div class="modal">
-    <h3>➕ 添加学生</h3>
+    <h3>✎ 修改姓名</h3>
     <div class="form-row">
       <label>姓名</label>
-      <input type="text" id="newStudentName" placeholder="输入学生姓名" style="flex:1;">
+      <input type="text" id="renameStudentInput" placeholder="输入学生姓名" style="flex:1;">
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeAddStudentModal()">取消</button>
-      <button class="btn btn-primary" onclick="confirmAddStudent()">确定添加</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('renameStudentModal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="confirmRenameStudent()">确定</button>
     </div>
   </div>
 </div>
@@ -634,19 +686,8 @@ function saveData(data) {
 let appData = loadData();
 
 function getCurrentStudent() {
-  const sel = document.getElementById('studentSelect');
-  const id = sel.value;
-  let s = appData.students.find(st => st.id === id);
-  if (!s && appData.students.length > 0) {
-    s = appData.students[0];
-  }
-  return s;
-}
-
-function ensureStudent() {
-  let s = getCurrentStudent();
+  let s = appData.students[0];
   if (!s) {
-    // auto-create default student
     s = { id: 'stu1', name: '同学', errorWordIds: [], wordStats: {}, practiceLog: [] };
     appData.students.push(s);
     saveData(appData);
@@ -654,8 +695,8 @@ function ensureStudent() {
   return s;
 }
 
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function ensureStudent() {
+  return getCurrentStudent();
 }
 
 // ============================================================
@@ -737,6 +778,40 @@ async function loadFile(dataType) {
 }
 
 // ============================================================
+//  自动加载数据（页面打开时静默加载字库、词库、分类）
+// ============================================================
+async function autoLoadDataFiles() {
+  const types = ['dict', 'words', 'categories'];
+  for (const type of types) {
+    try {
+      const resp = await fetch(`${DATA_API}/load/${type}`);
+      const result = await resp.json();
+      if (resp.ok && result.data !== null && result.data !== undefined) {
+        const loaded = result.data;
+        if (type === 'dict') {
+          Object.assign(appData.dict, loaded);
+        } else if (type === 'words') {
+          const existingIds = new Set(appData.words.map(w => w.id));
+          loaded.forEach(w => {
+            if (!existingIds.has(w.id)) {
+              appData.words.push(w);
+              existingIds.add(w.id);
+            }
+          });
+        } else if (type === 'categories') {
+          appData.categories = loaded;
+        }
+        saveData(appData);
+      }
+    } catch (e) {
+      // 静默失败，后端不可用时不影响使用
+    }
+  }
+  refreshAll();
+  renderDict();
+}
+
+// ============================================================
 //  TOAST
 // ============================================================
 function toast(msg, type = 'success') {
@@ -749,53 +824,30 @@ function toast(msg, type = 'success') {
 }
 
 // ============================================================
-//  STUDENT MANAGEMENT
+//  STUDENT MANAGEMENT — 单学生模式
 // ============================================================
-function renderStudentSelect() {
-  const sel = document.getElementById('studentSelect');
-  const currentId = sel.value;
-  sel.innerHTML = '';
-  if (appData.students.length === 0) {
-    const opt = document.createElement('option');
-    opt.value = ''; opt.textContent = '— 暂无学生 —';
-    sel.appendChild(opt);
-  } else {
-    appData.students.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.id; opt.textContent = s.name;
-      sel.appendChild(opt);
-    });
-  }
-  if (currentId && appData.students.some(s => s.id === currentId)) {
-    sel.value = currentId;
-  }
+function renderStudentName() {
+  const s = getCurrentStudent();
+  document.getElementById('studentNameDisplay').textContent = s.name;
 }
 
-function showAddStudentModal() {
-  document.getElementById('newStudentName').value = '';
-  document.getElementById('addStudentModal').classList.add('show');
-  setTimeout(() => document.getElementById('newStudentName').focus(), 100);
+function renameStudent() {
+  const s = getCurrentStudent();
+  const input = document.getElementById('renameStudentInput');
+  input.value = s.name;
+  document.getElementById('renameStudentModal').classList.add('show');
+  setTimeout(() => input.focus(), 100);
 }
 
-function closeAddStudentModal() {
-  document.getElementById('addStudentModal').classList.remove('show');
-}
-
-function confirmAddStudent() {
-  const name = document.getElementById('newStudentName').value.trim();
-  if (!name) { toast('请输入学生姓名', 'error'); return; }
-  const id = 'stu_' + generateId();
-  appData.students.push({
-    id, name,
-    errorWordIds: [],
-    wordStats: {},
-    practiceLog: []
-  });
+function confirmRenameStudent() {
+  const name = document.getElementById('renameStudentInput').value.trim();
+  if (!name) { toast('请输入姓名', 'error'); return; }
+  const s = getCurrentStudent();
+  s.name = name;
   saveData(appData);
-  renderStudentSelect();
-  document.getElementById('studentSelect').value = id;
-  closeAddStudentModal();
-  toast(`已添加学生「${name}」`);
+  document.getElementById('renameStudentModal').classList.remove('show');
+  renderStudentName();
+  toast(`已改名为「${name}」`);
   refreshAll();
 }
 
@@ -809,6 +861,7 @@ function switchTab(name) {
   if (name === 'practice') refreshPractice();
   if (name === 'history') refreshHistory();
   if (name === 'dict') renderDict();
+  if (name === 'stats') renderStatsPage();
 }
 
 // ============================================================
@@ -2795,33 +2848,30 @@ function showCorrection() {
   // 确保每个词有 wrongIndices
   words.forEach(w => { if (!w.wrongIndices) w.wrongIndices = []; });
 
-  const container = document.getElementById('correctList');
-  let html = '';
-  words.forEach((w, i) => {
-    // wrongIndices: 上次标记写错的字的索引数组，默认空数组（全对）
-    const wrongSet = new Set(w.wrongIndices || []);
-    html += `<div class="correct-item" data-index="${i}" style="flex-direction:column;align-items:stretch;gap:4px;">
-      <div class="word-info" style="font-size:13px;color:#718096;">
-        <span class="pinyin">${w.pinyin}</span>
-      </div>
-      <div style="display:flex;gap:6px;justify-content:center;">`;
+  // 把答案字填入预览区域的田字格，并添加点击事件
+  const previewEl = document.getElementById('practicePreview');
+  const wordContainers = previewEl.querySelectorAll('[style*="display:flex"] > .tzg-word');
+
+  words.forEach((w, wi) => {
+    const container = wordContainers[wi];
+    if (!container) return;
+    const boxes = container.querySelectorAll('.tzg-box');
     w.chars.forEach((ch, ci) => {
-      const isWrong = wrongSet.has(ci);
-      html += `<span class="correction-char ${isWrong ? 'wrong' : ''}"
-        onclick="toggleCharWrong(${i}, ${ci})"
-        style="display:inline-flex;align-items:center;justify-content:center;
-               width:40px;height:40px;font-size:22px;font-weight:600;
-               border-radius:8px;cursor:pointer;transition:all 0.15s;
-               border:2px solid ${isWrong ? '#fc8181' : '#e2e8f0'};
-               background:${isWrong ? '#fff5f5' : '#f7fafc'};
-               color:${isWrong ? '#c53030' : '#2d3748'};">
-        ${ch}
-      </span>`;
+      const box = boxes[ci];
+      if (!box) return;
+      // 注入答案字
+      const charText = document.createElement('span');
+      charText.className = 'tzg-char-text';
+      charText.textContent = ch;
+      box.appendChild(charText);
+      // 标记状态 + 点击事件
+      box.classList.add('with-answer');
+      if (w.wrongIndices.includes(ci)) {
+        box.classList.add('wrong');
+      }
+      box.onclick = function() { toggleCharWrong(wi, ci); };
     });
-    html += `    </div>
-    </div>`;
   });
-  container.innerHTML = html;
 
   document.getElementById('correctionSection').style.display = 'block';
 }
@@ -2840,16 +2890,28 @@ function toggleCharWrong(wordIndex, charIndex) {
     w.wrongIndices.push(charIndex);
   }
 
-  // 更新 UI
-  const items = document.querySelectorAll('.correct-item');
-  const chars = items[wordIndex]?.querySelectorAll('.correction-char');
-  if (chars && chars[charIndex]) {
-    chars[charIndex].classList.toggle('wrong');
-    const isWrong = w.wrongIndices.includes(charIndex);
-    chars[charIndex].style.borderColor = isWrong ? '#fc8181' : '#e2e8f0';
-    chars[charIndex].style.background = isWrong ? '#fff5f5' : '#f7fafc';
-    chars[charIndex].style.color = isWrong ? '#c53030' : '#2d3748';
+  // 更新 UI — 预览区的田字格 box 切换 wrong class
+  const previewEl = document.getElementById('practicePreview');
+  const wordContainers = previewEl.querySelectorAll('[style*="display:flex"] > .tzg-word');
+  const container = wordContainers[wordIndex];
+  if (container) {
+    const boxes = container.querySelectorAll('.with-answer');
+    if (boxes && boxes[charIndex]) {
+      boxes[charIndex].classList.toggle('wrong');
+    }
   }
+}
+
+function cancelCorrection() {
+  // 清除预览田字格中的答案字和点击事件
+  const previewEl = document.getElementById('practicePreview');
+  previewEl.querySelectorAll('.with-answer').forEach(box => {
+    box.classList.remove('with-answer', 'wrong');
+    const text = box.querySelector('.tzg-char-text');
+    if (text) text.remove();
+    box.onclick = null;
+  });
+  document.getElementById('correctionSection').style.display = 'none';
 }
 
 function submitCorrection() {
@@ -2973,18 +3035,165 @@ function saveSettings() {
 }
 
 // ============================================================
+//  STATS — ECharts 成绩统计折线图
+// ============================================================
+function renderStatsPage() {
+  // 确保 ECharts 已加载
+  if (typeof echarts === 'undefined') {
+    const el = document.getElementById('statsChart');
+    if (el) el.innerHTML = '<p class="empty-msg">⏳ 正在加载图表库...</p>';
+    return;
+  }
+  // 默认日期范围：近30天
+  setStatsLastMonth();
+}
+
+function setStatsLastMonth() {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 30);
+  document.getElementById('statsStartDate').value = start.toISOString().slice(0, 10);
+  document.getElementById('statsEndDate').value = end.toISOString().slice(0, 10);
+  renderStatsChart();
+}
+
+function setStatsLastWeek() {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 7);
+  document.getElementById('statsStartDate').value = start.toISOString().slice(0, 10);
+  document.getElementById('statsEndDate').value = end.toISOString().slice(0, 10);
+  renderStatsChart();
+}
+
+function setStatsAll() {
+  const student = ensureStudent();
+  const logs = student.practiceLog || [];
+  if (logs.length === 0) { renderStatsChart(); return; }
+  const dates = logs.map(l => l.date).sort();
+  document.getElementById('statsStartDate').value = dates[0];
+  document.getElementById('statsEndDate').value = dates[dates.length - 1];
+  renderStatsChart();
+}
+
+function renderStatsChart() {
+  const student = ensureStudent();
+  const logs = (student.practiceLog || []).sort((a, b) => a.date.localeCompare(b.date));
+  const startDate = document.getElementById('statsStartDate').value;
+  const endDate = document.getElementById('statsEndDate').value;
+
+  // 过滤日期范围
+  const filtered = logs.filter(l => (!startDate || l.date >= startDate) && (!endDate || l.date <= endDate));
+
+  const container = document.getElementById('statsChart');
+  const summaryEl = document.getElementById('statsSummary');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<p class="empty-msg">所选时间段内暂无练习数据</p>';
+    summaryEl.innerHTML = '';
+    return;
+  }
+
+  // 准备数据
+  const dates = filtered.map(l => l.date);
+  const rates = filtered.map(l => {
+    const words = l.words || [];
+    const total = words.length;
+    const wrong = words.filter(w => w.wrongIndices && w.wrongIndices.length > 0).length;
+    return total > 0 ? Math.round((total - wrong) / total * 100) : 100;
+  });
+
+  // 统计摘要
+  const avgRate = Math.round(rates.reduce((a, b) => a + b, 0) / rates.length);
+  const maxRate = Math.max(...rates);
+  const minRate = Math.min(...rates);
+  const totalWords = filtered.reduce((s, l) => s + (l.words || []).length, 0);
+  summaryEl.innerHTML = `
+    <span class="stat-badge">📅 共 <strong>${filtered.length}</strong> 天</span>
+    <span class="stat-badge">📝 共 <strong>${totalWords}</strong> 词</span>
+    <span class="stat-badge">📈 平均正确率 <strong>${avgRate}%</strong></span>
+    <span class="stat-badge">🏆 最高 <strong>${maxRate}%</strong></span>
+    <span class="stat-badge" style="${minRate < 80 ? 'background:#fed7d7;color:#9b2c2c;' : ''}">⬇ 最低 <strong>${minRate}%</strong></span>
+  `;
+
+  // 渲染 ECharts
+  const chartDom = document.createElement('div');
+  chartDom.style.cssText = 'width:100%;height:400px;';
+  container.innerHTML = '';
+  container.appendChild(chartDom);
+
+  const myChart = echarts.init(chartDom);
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const p = params[0];
+        const day = filtered[p.dataIndex];
+        const words = day.words || [];
+        const total = words.length;
+        const wrong = words.filter(w => w.wrongIndices && w.wrongIndices.length > 0).length;
+        return `<strong>${p.axisValue}</strong><br/>✅ 正确 ${total - wrong} / ${total} 词<br/>📊 正确率 ${p.value}%`;
+      }
+    },
+    grid: { left: '50', right: '30', top: '40', bottom: '50' },
+    xAxis: {
+      type: 'category',
+      data: dates,
+      axisLabel: { rotate: 45, fontSize: 11 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLabel: { formatter: '{value}%', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f0f4f8', type: 'dashed' } },
+      axisLine: { show: false }
+    },
+    series: [{
+      data: rates,
+      type: 'line',
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 8,
+      lineStyle: { width: 3, color: '#667eea' },
+      itemStyle: {
+        color: function(params) {
+          return params.value >= 90 ? '#48bb78' : params.value >= 70 ? '#ed8936' : '#fc8181';
+        }
+      },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(102,126,234,0.3)' },
+            { offset: 1, color: 'rgba(102,126,234,0.02)' }
+          ]
+        }
+      },
+      markLine: {
+        silent: true,
+        data: [
+          { yAxis: 90, label: { formatter: '优秀 90%', color: '#48bb78', fontSize: 11 }, lineStyle: { color: '#48bb78', type: 'dashed' } },
+          { yAxis: 60, label: { formatter: '及格 60%', color: '#ed8936', fontSize: 11 }, lineStyle: { color: '#ed8936', type: 'dashed' } }
+        ]
+      }
+    }]
+  };
+  myChart.setOption(option);
+
+  // 窗口调整时自适应
+  window.addEventListener('resize', () => myChart.resize());
+}
+
+// ============================================================
 //  INIT
 // ============================================================
 function refreshAll() {
-  renderStudentSelect();
+  renderStudentName();
   const activeTab = document.querySelector('.tab-btn.active');
   if (activeTab) switchTab(activeTab.dataset.tab);
 }
-
-// Auto-init student on select change
-document.getElementById('studentSelect').addEventListener('change', () => {
-  refreshAll();
-});
 
 // Enter key support
 document.getElementById('charInput').addEventListener('keydown', e => {
@@ -3008,12 +3217,15 @@ document.getElementById('pinyinInput').addEventListener('input', function() {
     _selectedPinyin = null;
   }
 });
-document.getElementById('newStudentName').addEventListener('keydown', e => {
-  if (e.key === 'Enter') confirmAddStudent();
+document.getElementById('renameStudentInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmRenameStudent();
 });
 
 // Compose char select change
 document.getElementById('composeCharSelect').addEventListener('change', onComposeCharChange);
+
+// 初始化学生（不存在则创建默认）
+getCurrentStudent();
 
 // ============================================================
 //  BACKEND STATUS — 自动检测后端连接状态
@@ -3078,12 +3290,13 @@ async function autoConnectBackend() {
 
 // Initialize
 loadSettings();
-renderStudentSelect();
 ensureStudent();
 refreshAll();
 
-// Auto-connect backend on page load
-autoConnectBackend();
+// Auto-connect backend + 自动加载数据文件
+autoConnectBackend().then(() => {
+  autoLoadDataFiles();
+});
 </script>
 
 </body>
