@@ -27,3 +27,4 @@ git-push.log
 jieba.cache
 
 *.ps1
+*.json
