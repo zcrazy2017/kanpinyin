@@ -49,6 +49,7 @@ App.History = {
           <span style="font-size:13px;color:#4a5568;">${wCount} 词</span>
           <span style="font-size:13px;color:${wWrong > 0 ? '#e53e3e' : '#48bb78'};">${wWrong > 0 ? `❌ 错 ${wWrong}` : '✅ 全对'}</span>
           <span style="font-size:13px;color:#718096;">${rate}%</span>
+          <button class="btn btn-ghost btn-sm" onclick="App.History.loadToPractice(${li})">📂 加载到出题</button>
           <button class="btn btn-ghost btn-sm" onclick="App.History.showDetail(${li})">📋 详情</button>
           <button class="btn btn-ghost btn-sm" onclick="App.History.editLog(${li})">✏️ 修改</button>
           <button class="btn btn-ghost btn-sm" onclick="App.History.deleteLog(${li}, this)" style="color:#e53e3e;">🗑️ 删除</button>
@@ -76,6 +77,29 @@ App.History = {
     if (App.Stats && App.Stats.renderAchievements) App.Stats.renderAchievements();
     // 刷新复习提醒
     if (App.Stats && App.Stats.renderReviewUrgency) App.Stats.renderReviewUrgency();
+  },
+
+  /** 将历史练习加载到出题页面 */
+  loadToPractice(logIndex) {
+    const student = Store.getCurrentStudent();
+    const logs = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date));
+    const log = logs[logIndex];
+    if (!log) { App.UI.toast('未找到该历史记录', 'error'); return; }
+
+    const words = (log.words || []).map(w => {
+      const wordObj = Store.data.words.find(x => x.id === w.wordId);
+      return {
+        wordId: w.wordId,
+        chars: w.chars || (wordObj ? [...wordObj.chars] : []),
+        pinyin: w.pinyin || (wordObj ? wordObj.pinyin : '')
+      };
+    }).filter(w => w.chars.length > 0);
+
+    if (words.length === 0) { App.UI.toast('该历史记录中没有有效词语', 'error'); return; }
+
+    App.Practice._currentPractice = words;
+    App.UI.toast(`📂 已加载 ${log.date} 的历史练习（${words.length} 词）`);
+    App.switchTab('practice');
   },
 
   /** 显示详情 */
@@ -288,6 +312,7 @@ window.showHistoryDetail = (idx) => App.History.showDetail(idx);
 window.editHistoryLog = (idx) => App.History.editLog(idx);
 window.saveHistoryEdit = (idx, btn) => App.History.saveEdit(idx, btn);
 window.cancelHistoryEdit = () => App.History.cancelEdit();
+window.loadHistoryToPractice = (idx) => App.History.loadToPractice(idx);
 window.deleteHistoryLog = (idx, btn) => App.History.deleteLog(idx, btn);
 window.toggleHistoryChar = (idx, wi, ci, type) => App.History.toggleChar(idx, wi, ci, type);
 window.showHistoryErrorTypePopup = (idx, wi, ci, el) => App.History.showErrorTypePopup(idx, wi, ci, el);

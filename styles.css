@@ -719,7 +719,7 @@ input.count-input { width: 70px; }
     border-width: 1.5px;
   }
   .print-page .tzg-char .pinyin-label {
-    font-size: calc(9.5pt * var(--scale, 1));
+    font-size: calc(18pt * var(--scale, 1));
   }
   .print-page .tzg-word {
     gap: calc(1.5mm * var(--scale, 1));
