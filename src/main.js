@@ -81,6 +81,11 @@ document.getElementById('savePracticeNameInput').addEventListener('keydown', e =
   if (e.key === 'Enter') App.Practice.confirmSave();
 });
 
+// 初始化精灵
+App.Pet.init();
+App.Pet.render();
+App.Pet.greet();
+
 // 刷新当前面板
 const activeTab = document.querySelector('.tab-btn.active');
 if (activeTab) App.switchTab(activeTab.dataset.tab);

@@ -9,6 +9,12 @@
 </head>
 <body>
 
+<!-- ==================== 全局浮动精灵 ==================== -->
+<div id="globalPet" class="global-pet" onclick="App.Pet._onGlobalPetClick()">
+  <div id="globalPetSprite" class="global-pet-sprite"></div>
+  <div id="globalPetBubble" class="global-pet-bubble" style="display:none;"><span id="globalPetBubbleText"></span></div>
+</div>
+
 <!-- ==================== Header ==================== -->
 <header class="header">
   <h1><span>📖</span> 看拼音写词语 · 智能练习系统</h1>
@@ -32,6 +38,7 @@
   <button class="tab-btn" data-tab="history" onclick="switchTab('history')">📊 历史记录</button>
   <button class="tab-btn" data-tab="dict" onclick="switchTab('dict')">📖 字典</button>
   <button class="tab-btn" data-tab="stats" onclick="switchTab('stats')">📈 统计</button>
+  <button class="tab-btn" data-tab="pet" onclick="switchTab('pet')">🐉 精灵</button>
 </nav>
 
 <!-- ==================== Main Content ==================== -->
@@ -407,6 +414,70 @@
 
 </div>
 
+<!-- ===== Pet Evolution Panel ===== -->
+<div class="panel" id="panel-pet">
+  <div class="pet-page">
+
+    <!-- 顶部：大精灵展示区 -->
+    <div class="pet-hero">
+      <div class="pet-hero-bg">
+        <div id="petShowcaseSprite" class="pet-hero-sprite"></div>
+        <div id="petShowcaseBubble" class="pet-hero-bubble" style="display:none;">
+          <span id="petShowcaseBubbleText"></span>
+        </div>
+      </div>
+      <div class="pet-hero-info">
+        <div class="pet-hero-name" id="petShowcaseName">🥚 沉睡</div>
+        <div class="pet-hero-desc" id="petShowcaseDesc">等待被唤醒...</div>
+        <div class="pet-hero-exp-bar">
+          <div class="pet-hero-exp-fill" id="petShowcaseExpFill"></div>
+        </div>
+        <div class="pet-hero-exp-text" id="petShowcaseExpText">0 / 50 EXP</div>
+      </div>
+    </div>
+
+    <!-- 进化全览：6 阶段缩略条 -->
+    <div class="pet-evolution-strip" id="petEvolutionStrip"></div>
+
+    <!-- 下部：两列布局 -->
+    <div class="pet-bottom">
+      <!-- 左列：进化之路详情 -->
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title" style="font-size:16px;">🌟 进化之路</div>
+        <div class="pet-road-list" id="petRoadList"></div>
+      </div>
+
+      <!-- 右列：形象 + 最近活动 -->
+      <div class="pet-right-col">
+        <div class="card">
+          <div class="card-title" style="font-size:16px;">🎨 精灵形象</div>
+          <div id="petThemeSelect" class="pet-theme-select"></div>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title" style="font-size:16px;">📜 最近成就</div>
+          <div id="petRecentActivity">
+            <p class="empty-msg">继续练习，解锁更多成就！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 主题预览弹窗 ===== -->
+<div class="modal-overlay" id="petPreviewModal">
+  <div class="modal" style="max-width:520px;">
+    <h3 id="petPreviewTitle">🦊 火灵狐</h3>
+    <div id="petPreviewContent" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px 0;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="petPreviewUnlockBtn" onclick="App.Pet._previewUnlock()">🔓 消耗 30 EXP 解锁</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('petPreviewModal').classList.remove('show')">关闭</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== Print Area ==================== -->
 <div class="print-area" id="printArea"></div>
 
@@ -481,6 +552,12 @@
 <script src="src/modules/history.js"></script>
 <script src="src/modules/dict.js"></script>
 <script src="src/modules/stats.js"></script>
+<!-- 精灵主题（可扩展） -->
+<script src="src/pet-themes/registry.js"></script>
+<script src="src/pet-themes/dragon.js"></script>
+<script src="src/pet-themes/firefox.js"></script>
+<script src="src/pet-themes/icerabbit.js"></script>
+<script src="src/modules/pet.js"></script>
 <script src="src/main.js"></script>
 
 </body>

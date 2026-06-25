@@ -222,6 +222,7 @@ App.Practice = {
     this._currentPractice = practice;
     App.UI.toast(`已生成 ${practice.length} 道练习（打印后将自动记录）`);
     this.refresh();
+    if (App.Pet) App.Pet.onPracticeReady();
   },
 
   /** 重新出题 */
@@ -424,6 +425,16 @@ App.Practice = {
     App.UI.toast('✅ 批改结果已保存！');
     document.getElementById('correctionSection').style.display = 'none';
     this.refresh();
+
+    // 触发精灵交互
+    if (App.Pet) {
+      const isPerfect = log.words.every(w => !w.wrongIndices || w.wrongIndices.length === 0);
+      const beforeCount = student.errorWordIds.length;
+      // 重新计算错误词数（提交后可能已移除）
+      const afterCount = (student.errorWordIds || []).length;
+      const slainErrors = Math.max(0, beforeCount - afterCount);
+      App.Pet.onPracticeSubmitted({ isPerfect, slainErrors, total: log.words.length });
+    }
   },
 
   // ---- 打印 ----

@@ -200,6 +200,177 @@ input.count-input { width: 70px; }
 .pinyin-option-btn:hover { background: #ebf4ff; }
 .pinyin-option-btn.selected { background: #667eea; color: #fff; }
 
+/* ========== 精灵进化页面 ========== */
+.pet-page { display: flex; flex-direction: column; gap: 16px; }
+
+/* ---- 顶部英雄区 ---- */
+.pet-hero {
+  background: linear-gradient(145deg, #1a202c 0%, #2d3748 50%, #1a202c 100%);
+  border-radius: 20px; padding: 28px 24px 24px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 260px;
+}
+.pet-hero::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 15% 80%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.2) 0%, transparent 100%);
+  pointer-events: none;
+}
+.pet-hero-bg {
+  position: relative; min-width: 120px; min-height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 12px; z-index: 1; padding: 8px;
+}
+.pet-hero-bg::after {
+  content: ''; position: absolute;
+  width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(102,126,234,0.12) 0%, transparent 70%);
+  animation: petShowcaseGlow 3s ease-in-out infinite;
+}
+.pet-hero-sprite {
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2;
+  animation: petShowcaseFloat 3s ease-in-out infinite;
+  transition: width 0.5s ease, height 0.5s ease;
+}
+.pet-hero-sprite svg { width: 100%; height: 100%; display: block; }
+
+@keyframes petShowcaseGlow {
+  0%,100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+@keyframes petShowcaseFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.pet-hero-bubble {
+  position: absolute; top: -20px; right: -60px;
+  background: #fff; border: 2px solid #667eea; border-radius: 14px;
+  padding: 8px 14px; font-size: 13px; white-space: nowrap;
+  color: #2d3748; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  z-index: 100; animation: bubbleIn 0.3s ease;
+}
+.pet-hero-bubble::after {
+  content: ''; position: absolute; bottom: -8px; left: 30%;
+  border: 6px solid transparent; border-top-color: #667eea;
+}
+
+.pet-hero-info { text-align: center; z-index: 1; }
+.pet-hero-name { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.pet-hero-desc { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 10px; }
+.pet-hero-exp-bar {
+  width: 220px; height: 8px;
+  background: rgba(255,255,255,0.15); border-radius: 4px;
+  overflow: hidden; margin: 0 auto 5px;
+}
+.pet-hero-exp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pet-hero-exp-text { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+/* ---- 进化全览缩略条 ---- */
+.pet-evolution-strip {
+  background: #fff; border-radius: 14px;
+  padding: 12px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  overflow-x: auto;
+}
+.strip-inner {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 2px;
+  min-width: 480px;
+}
+.strip-node {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 2px; cursor: pointer; padding: 4px 6px;
+  border-radius: 10px; transition: all 0.25s; flex-shrink: 0;
+}
+.strip-node:hover { background: #f7fafc; transform: translateY(-3px); }
+.strip-node.strip-current { background: #ebf4ff; }
+.strip-node.strip-done .strip-icon { opacity: 0.7; filter: grayscale(0.3); }
+.strip-node.strip-locked .strip-icon { opacity: 0.35; filter: grayscale(0.7); }
+.strip-icon svg { display: block; }
+.strip-label { font-size: 11px; font-weight: 500; color: #4a5568; white-space: nowrap; }
+.strip-exp { font-size: 10px; color: #a0aec0; }
+.strip-connector {
+  height: 2px; flex: 1; min-width: 8px;
+  background: linear-gradient(90deg, #e2e8f0, #cbd5e0);
+  border-radius: 1px; margin: 0 2px; margin-bottom: 28px;
+}
+
+/* ---- 底部两列 ---- */
+.pet-bottom {
+  display: grid; grid-template-columns: 1fr 300px;
+  gap: 16px; align-items: start;
+}
+.pet-right-col { display: flex; flex-direction: column; gap: 14px; }
+
+/* 进化之路列表 */
+.pet-road { display: flex; flex-direction: column; gap: 14px; }
+.pet-road-list { display: flex; flex-direction: column; gap: 5px; }
+.pet-road-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: #f7fafc;
+  border-radius: 10px; border: 2px solid transparent;
+  transition: all 0.25s; cursor: pointer;
+}
+.pet-road-item:hover { background: #edf2f7; }
+.pet-road-item.current { background: linear-gradient(135deg, #ebf4ff, #e8f5e9); border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.15); }
+.pet-road-item.locked { opacity: 0.45; filter: grayscale(0.6); }
+.pet-road-icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.pet-road-icon svg { width: 100%; height: 100%; display: block; }
+.pet-road-info { flex: 1; min-width: 0; }
+.pet-road-name { font-size: 14px; font-weight: 600; color: #2d3748; }
+.pet-road-desc { font-size: 12px; color: #718096; }
+.pet-road-exp { font-size: 11px; color: #a0aec0; margin-top: 1px; }
+.pet-road-status { font-size: 13px; flex-shrink: 0; }
+
+/* ---- 形象选择器 ---- */
+.pet-theme-select { padding: 4px 0; }
+.pet-theme-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 10px;
+  border: 2px solid #e2e8f0; cursor: pointer;
+  transition: all 0.25s; width: 100%;
+}
+.pet-theme-item:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+.pet-theme-item.active { border-color: transparent; box-shadow: 0 2px 8px rgba(102,126,234,0.25); }
+.pet-theme-item.locked:hover { border-color: #a0aec0; background: #f7fafc; }
+.pet-theme-preview { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pet-theme-preview svg { width: 100%; height: 100%; display: block; }
+.pet-theme-meta { flex: 1; min-width: 0; }
+.pet-theme-tname { font-size: 14px; font-weight: 600; }
+.pet-theme-tdesc { font-size: 11px; }
+.pet-theme-badge-wrap { flex-shrink: 0; display: flex; align-items: center; }
+.pet-theme-badge { font-size: 12px; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.25); color: #fff; display: flex; align-items: center; justify-content: center; }
+.pet-theme-cost { font-size: 11px; color: #a0aec0; padding: 2px 6px; border-radius: 6px; background: #edf2f7; }
+
+/* ---- 预览弹窗 ---- */
+.preview-stage { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; background: #f7fafc; border-radius: 10px; min-width: 70px; transition: transform 0.2s; }
+.preview-stage:hover { transform: translateY(-4px); background: #edf2f7; }
+.preview-sprite { display: flex; align-items: center; justify-content: center; }
+.preview-sprite svg { display: block; }
+.preview-name { font-size: 12px; font-weight: 500; color: #4a5568; white-space: nowrap; }
+.preview-exp-need { font-size: 10px; color: #a0aec0; }
+
+/* ---- 最近活动 ---- */
+.pet-activity-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: #f7fafc; margin-bottom: 5px; transition: background 0.2s; }
+.pet-activity-item:hover { background: #edf2f7; }
+.pet-activity-icon { font-size: 15px; }
+.pet-activity-text { flex: 1; font-size: 13px; color: #4a5568; }
+.pet-activity-date { font-size: 11px; color: #a0aec0; white-space: nowrap; }
+
 /* ========== Print Styles — 田字格 ========== */
 .print-area { display: none; }
 
@@ -618,4 +789,110 @@ input.count-input { width: 70px; }
 }
 #achievementsList > div:hover {
   z-index: 10;
+}
+
+/* ========== 全局浮动精灵 ========== */
+.global-pet {
+  position: fixed;
+  z-index: 2147483646;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: auto;
+  transition: opacity 0.5s ease, transform 0.3s ease;
+}
+.global-pet:hover {
+  filter: drop-shadow(0 0 8px rgba(102,126,234,0.4));
+}
+
+.global-pet-sprite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+}
+.global-pet-sprite svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 各阶段全局动画 */
+.global-pet-sprite.stage-0 { opacity: 0.6; filter: grayscale(0.4); }
+.global-pet-sprite.stage-1 { animation: petFloat 3s ease-in-out infinite; }
+.global-pet-sprite.stage-2 { animation: petFloat 2.5s ease-in-out infinite; }
+.global-pet-sprite.stage-3 {
+  animation: petBreathe 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(237,137,54,0.3));
+}
+.global-pet-sprite.stage-4 {
+  animation: petPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(128,90,213,0.4));
+}
+.global-pet-sprite.stage-5 {
+  animation: petLegendary 3s linear infinite;
+  filter: drop-shadow(0 0 12px rgba(246,224,94,0.6));
+}
+
+/* 全局精灵气泡 */
+.global-pet-bubble {
+  position: absolute;
+  bottom: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 2px solid #667eea;
+  border-radius: 14px;
+  padding: 6px 14px;
+  font-size: 13px;
+  white-space: nowrap;
+  color: #2d3748;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  z-index: 2147483647;
+  pointer-events: none;
+  animation: bubbleIn 0.3s ease;
+}
+.global-pet-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #667eea;
+}
+.global-pet-bubble.bubble-down::after {
+  bottom: auto;
+  top: -8px;
+  border-top-color: transparent;
+  border-bottom-color: #667eea;
+}
+
+/* 撒花（全局全屏） */
+@keyframes confettiFall {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translateY(60px) rotate(540deg) scale(0); }
+}
+
+@keyframes petBreathe {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes petFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes petPulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes petLegendary {
+  0%,100% { transform: translateY(0) scale(1) rotate(0deg); }
+  25% { transform: translateY(-4px) scale(1.04) rotate(-2deg); }
+  50% { transform: translateY(0) scale(1.08) rotate(0deg); }
+  75% { transform: translateY(-4px) scale(1.04) rotate(2deg); }
+}
+@keyframes bubbleIn {
+  0% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }

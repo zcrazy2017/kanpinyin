@@ -29,5 +29,6 @@ window.App = {
     if (name === 'history' && this.History.refresh) this.History.refresh();
     if (name === 'dict' && this.Dict.render) this.Dict.render();
     if (name === 'stats' && this.Stats.renderPage) this.Stats.renderPage();
+    if (name === 'pet' && this.Pet.renderPage) this.Pet.renderPage();
   },
 };
