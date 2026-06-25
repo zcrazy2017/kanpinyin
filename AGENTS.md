@@ -4,8 +4,10 @@
 
 **看拼音写词语 · 智能练习系统** — 纯前端、完全本地运行的家长辅助工具，用于生成小学生"看拼音写词语"练习题。
 
-- **技术栈**：纯 HTML + CSS + JavaScript（`index.html`）+ Python Flask 后端
+- **技术栈**：纯 HTML + CSS + JavaScript（模块化 SPA）+ Python Flask 后端
+- **前端架构**：`index.html` 作为壳页面，功能逻辑拆分到 `src/` 目录下的模块化 JS 文件
 - **数据存储**：`localStorage`（键名: `kanpinyin_data`）+ JSON 文件（通过后端 API 分文件存储）
+- **状态管理**：`Store` 模式（`src/data/store.js`），单一数据源 + 变更通知
 - **打印方案**：`window.print()` + CSS `@page` / `@media print`，田字格样式
 - **拼音识别**：`server/app.py` Python 后端（端口 5001），使用 `pypinyin` 库
 - **词语验证**：`server/word_composer.py` Python 后端，使用 `jieba` 词典验证真实词语
@@ -93,6 +95,34 @@
 | VS Code 任务 | 运行「启动后端服务」任务 |
 | 直接打开 `index.html` | 前端自动检测后端状态，未连接时显示提示 |
 
+## 前端模块架构
+
+```
+index.html              ← 壳页面（HTML 结构 + CSS 引用 + script 加载）
+styles.css              ← 独立样式文件
+src/
+  app.js                ← 全局 App 命名空间 + Tab 切换
+  main.js               ← 初始化 + 兼容层 + 后端自动连接
+  data/
+    store.js            ← Store 状态管理（观察者模式/单一数据源）
+                           提供: Store.data, Store.save(), Store.getCurrentStudent()
+                           订阅: Store.subscribe(path, callback)
+  utils/
+    ui.js               ← UI 工具函数（toast, confirm, shuffle, weightedRandomIndex 等）
+  modules/
+    practice.js         ← 出题 / 批改 / 打印 / 已保存练习
+    library.js          ← 字库管理 / 分类管理 / 组词 / 批量导入
+    history.js          ← 历史记录 / 修改 / 详情 / 常错字排行
+    dict.js             ← 字典浏览 / 拼音编辑 / 字统计
+    stats.js            ← 成绩统计 ECharts 折线图
+```
+
+**模块约定**：
+- 每个模块挂在 `App.ModuleName` 命名空间下（如 `App.Practice.generate()`）
+- 通过 `window.xxx = ...` 暴露兼容层，使 HTML 中 `onclick` 引用保持可用
+- 状态统一通过 `Store` 管理，避免直接修改 `appData` 全局变量
+- 新增功能时在对应模块文件内添加，不要增加 `index.html` 的 `<script>` 标签数
+
 ## 界面架构
 
 三个主面板（Tab 切换）+ 字库管理内含两个子 Tab：
@@ -127,11 +157,26 @@
 
 ## 关键函数约定
 
-- `weightedRandomIndex(items, weightFunc)` — 加权随机抽取（**返回索引**）
-- `getFilteredWords()` — 按选中的分类筛选词库
-- `buildTzgWordHtml(word)` — 生成田字格 HTML
-- `window._currentPractice` — 临时练习预览（打印/批改时写入 practiceLog）
-- 批改：`wrongIndices: [0]` 表示词中第0个字写错
+- `App.UI.weightedRandomIndex(items, weightFunc)` — 加权随机抽取（**返回索引**）
+- `App.UI.shuffle(arr)` — Fisher-Yates 洗牌
+- `App.Practice.getFilteredWords()` — 按选中的分类筛选词库
+- `App.Practice.buildTzgWordHtml(word)` — 生成田字格 HTML
+- `App.Practice._currentPractice` — 临时练习预览（打印/批改时写入 practiceLog）
+- `window._currentPractice` (Proxy) — 兼容旧引用的代理
+- 批改：`wrongIndices: [0]` 表示词中第0个字写错，`wrongTypes: {0: "wrong_char"|"blank_char"}` 标记错误类型
+
+## 模块间调用约定
+
+| 调用方 | 目标 | 方式 |
+|--------|------|------|
+| 任何模块 | 数据读写 | `Store.data.xxx` / `Store.save()` |
+| 任何模块 | Toast提示 | `App.UI.toast(msg, type)` |
+| 任何模块 | 确认对话框 | `await App.UI.showConfirm(msg)` |
+| Practice | 分类筛选 | `App.Library.getAllCategoriesFlat(nodes)` |
+| Dict | 分类过滤 | `Store.getCategoryAndDescendantIds(catId)` |
+| Dict | 字统计 | `App.Dict.computeCharStats(char)` |
+| Library | 后端拼音 | `fetch(http://localhost:5001/api/pinyin?... )` |
+| 历史/出题 | 学生数据 | `Store.getCurrentStudent()` |
 
 ## JSON 文件数据持久化
 修改程序不要修改持久化数据文件
@@ -150,3 +195,6 @@
 - 练习仅在打印/批改时写入 `practiceLog`，刷新页面后未保存的临时练习会丢失
 - 删除字时会自动删除所有包含该字的词及相关统计
 - 分类删除后，字和词的 `categoryId` 会被清空而非删除
+- **模块加载顺序**：`store.js` → `app.js` → `ui.js` → `practice.js` → `library.js` → `history.js` → `dict.js` → `stats.js` → `main.js`（按依赖顺序排列）
+- 修改功能时找到对应模块文件编辑，不要修改 `index.html` 的 `<script>` 标签
+- 新增公共函数应挂在 `App.ModuleName` 下，并通过 `window.xxx = ...` 提供 onclick 兼容

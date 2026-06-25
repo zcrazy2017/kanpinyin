@@ -1,22 +1,42 @@
+"""Check syntax of JS code across all module files and index.html."""
 import re
+import glob
 BACKTICK = chr(96)
 
-with open("index.html", "r", encoding="utf-8") as f:
-    html = f.read()
+all_ok = True
 
-m = re.search(r"<script>(.*?)</script>", html, re.DOTALL)
-js = m.group(1)
+for fpath in ["index.html"] + sorted(glob.glob("src/**/*.js", recursive=True)):
+    with open(fpath, "r", encoding="utf-8") as f:
+        content = f.read()
 
-bt_count = js.count(BACKTICK)
-print(f"Backticks: {bt_count}, even: {bt_count % 2 == 0}")
+    if fpath.endswith(".html"):
+        # Find all <script src="..."> external references
+        # No inline script expected anymore
+        js_code = ""
+    else:
+        js_code = content
 
-single_in_template = False
-open_template = False
-for i, ch in enumerate(js):
-    if ch == BACKTICK:
-        open_template = not open_template
-    elif ch == "'" and not open_template:
-        single_in_template = not single_in_template
+    if not js_code:
+        print(f"✓ {fpath} (no inline script to check)")
+        continue
 
-print(f"Template balanced: {not open_template}")
-print(f"Length: {len(js)}")
+    bt_count = js_code.count(BACKTICK)
+    open_template = False
+    for ch in js_code:
+        if ch == BACKTICK:
+            open_template = not open_template
+    balanced = not open_template
+
+    issues = []
+    if bt_count % 2 != 0:
+        issues.append(f"ODD backtick count ({bt_count})")
+        all_ok = False
+    if not balanced:
+        issues.append("UNBALANCED template literals")
+        all_ok = False
+
+    icon = "✅" if not issues else "❌"
+    print(f"{icon} {fpath}: bt={bt_count} bal={balanced} len={len(js_code)}"
+          + (f" -- {', '.join(issues)}" if issues else ""))
+
+print(f"\n{'All OK' if all_ok else 'ISSUES FOUND'}")
