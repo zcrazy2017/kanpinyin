@@ -86,9 +86,10 @@ App.Pet.init();
 App.Pet.render();
 App.Pet.greet();
 
-// 刷新当前面板
-const activeTab = document.querySelector('.tab-btn.active');
-if (activeTab) App.switchTab(activeTab.dataset.tab);
+// 初始化桌面（默认显示桌面）
+App.Desktop.init();
+
+// 刷新当前面板（保存在桌面打开后调用）
 App.Practice.renderSavedPractices();
 
 // ---- 后端自动连接 ----

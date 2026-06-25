@@ -9,11 +9,36 @@
 </head>
 <body>
 
-<!-- ==================== 全局浮动精灵 ==================== -->
-<div id="globalPet" class="global-pet" onclick="App.Pet._onGlobalPetClick()">
-  <div id="globalPetSprite" class="global-pet-sprite"></div>
-  <div id="globalPetBubble" class="global-pet-bubble" style="display:none;"><span id="globalPetBubbleText"></span></div>
+<!-- ==================== 桌面（默认显示） ==================== -->
+<div id="desktop" class="active">
+  <div class="desktop-wallpaper">
+    <!-- 桌面图标区 -->
+    <div class="desktop-icons-area">
+      <div class="desktop-icon-grid" id="desktopIconGrid"></div>
+    </div>
+    <!-- 底部任务栏 -->
+    <div class="desktop-taskbar">
+      <span class="taskbar-title">📖 智能练习系统</span>
+      <span class="taskbar-clock" id="taskbarClock"></span>
+    </div>
+  </div>
 </div>
+
+<!-- ==================== 应用窗口 ==================== -->
+<div id="appWindow">
+  <!-- 标题栏 + 返回按钮 -->
+  <div class="app-title-bar">
+    <button class="app-back-btn" onclick="App.Desktop.closeApp()">← 返回桌面</button>
+    <div class="app-title-center">
+      <span class="app-title-text" id="appWindowTitle">📝 看拼音写汉字</span>
+    </div>
+    <div style="width:100px;"></div>
+  </div>
+  <!-- 应用主体内容 -->
+  <div class="app-body">
+
+    <!-- ===== App: 看拼音写汉字 ===== -->
+    <div class="app-content active" id="app-content-kanpinyin">
 
 <!-- ==================== Header ==================== -->
 <header class="header">
@@ -38,7 +63,6 @@
   <button class="tab-btn" data-tab="history" onclick="switchTab('history')">📊 历史记录</button>
   <button class="tab-btn" data-tab="dict" onclick="switchTab('dict')">📖 字典</button>
   <button class="tab-btn" data-tab="stats" onclick="switchTab('stats')">📈 统计</button>
-  <button class="tab-btn" data-tab="pet" onclick="switchTab('pet')">🐉 精灵</button>
 </nav>
 
 <!-- ==================== Main Content ==================== -->
@@ -414,56 +438,71 @@
 
 </div>
 
-<!-- ===== Pet Evolution Panel ===== -->
-<div class="panel" id="panel-pet">
-  <div class="pet-page">
+</div>
+    <!-- ===== End App: 看拼音写汉字 ===== -->
 
-    <!-- 顶部：大精灵展示区 -->
-    <div class="pet-hero">
-      <div class="pet-hero-bg">
-        <div id="petShowcaseSprite" class="pet-hero-sprite"></div>
-        <div id="petShowcaseBubble" class="pet-hero-bubble" style="display:none;">
-          <span id="petShowcaseBubbleText"></span>
-        </div>
-      </div>
-      <div class="pet-hero-info">
-        <div class="pet-hero-name" id="petShowcaseName">🥚 沉睡</div>
-        <div class="pet-hero-desc" id="petShowcaseDesc">等待被唤醒...</div>
-        <div class="pet-hero-exp-bar">
-          <div class="pet-hero-exp-fill" id="petShowcaseExpFill"></div>
-        </div>
-        <div class="pet-hero-exp-text" id="petShowcaseExpText">0 / 50 EXP</div>
-      </div>
-    </div>
+    <!-- ===== App: 精灵乐园 ===== -->
+    <div class="app-content" id="app-content-pet">
+      <div class="pet-page">
 
-    <!-- 进化全览：6 阶段缩略条 -->
-    <div class="pet-evolution-strip" id="petEvolutionStrip"></div>
-
-    <!-- 下部：两列布局 -->
-    <div class="pet-bottom">
-      <!-- 左列：进化之路详情 -->
-      <div class="card" style="margin-bottom:0;">
-        <div class="card-title" style="font-size:16px;">🌟 进化之路</div>
-        <div class="pet-road-list" id="petRoadList"></div>
-      </div>
-
-      <!-- 右列：形象 + 最近活动 -->
-      <div class="pet-right-col">
-        <div class="card">
-          <div class="card-title" style="font-size:16px;">🎨 精灵形象</div>
-          <div id="petThemeSelect" class="pet-theme-select"></div>
-        </div>
-
-        <div class="card" style="margin-bottom:0;">
-          <div class="card-title" style="font-size:16px;">📜 最近成就</div>
-          <div id="petRecentActivity">
-            <p class="empty-msg">继续练习，解锁更多成就！</p>
+        <!-- 顶部：大精灵展示区 -->
+        <div class="pet-hero">
+          <div class="pet-hero-bg">
+            <div id="petShowcaseSprite" class="pet-hero-sprite"></div>
+            <div id="petShowcaseBubble" class="pet-hero-bubble" style="display:none;">
+              <span id="petShowcaseBubbleText"></span>
+            </div>
+          </div>
+          <div class="pet-hero-info">
+            <div class="pet-hero-name" id="petShowcaseName">🥚 沉睡</div>
+            <div class="pet-hero-desc" id="petShowcaseDesc">等待被唤醒...</div>
+            <div class="pet-hero-exp-bar">
+              <div class="pet-hero-exp-fill" id="petShowcaseExpFill"></div>
+            </div>
+            <div class="pet-hero-exp-text" id="petShowcaseExpText">0 / 50 EXP</div>
           </div>
         </div>
+
+        <!-- 进化全览：6 阶段缩略条 -->
+        <div class="pet-evolution-strip" id="petEvolutionStrip"></div>
+
+        <!-- 下部：两列布局 -->
+        <div class="pet-bottom">
+          <!-- 左列：进化之路详情 -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-title" style="font-size:16px;">🌟 进化之路</div>
+            <div class="pet-road-list" id="petRoadList"></div>
+          </div>
+
+          <!-- 右列：形象 + 最近活动 -->
+          <div class="pet-right-col">
+            <div class="card">
+              <div class="card-title" style="font-size:16px;">🎨 精灵形象</div>
+              <div id="petThemeSelect" class="pet-theme-select"></div>
+            </div>
+
+            <div class="card" style="margin-bottom:0;">
+              <div class="card-title" style="font-size:16px;">📜 最近成就</div>
+              <div id="petRecentActivity">
+                <p class="empty-msg">继续练习，解锁更多成就！</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
+    <!-- ===== End App: 精灵乐园 ===== -->
 
   </div>
+  <!-- ===== End app-body ===== -->
+</div>
+<!-- ===== End appWindow ===== -->
+
+<!-- ==================== 全局浮动精灵 ==================== -->
+<div id="globalPet" class="global-pet" onclick="App.Pet._onGlobalPetClick()">
+  <div id="globalPetSprite" class="global-pet-sprite"></div>
+  <div id="globalPetBubble" class="global-pet-bubble" style="display:none;"><span id="globalPetBubbleText"></span></div>
 </div>
 
 <!-- ===== 主题预览弹窗 ===== -->
@@ -552,6 +591,7 @@
 <script src="src/modules/history.js"></script>
 <script src="src/modules/dict.js"></script>
 <script src="src/modules/stats.js"></script>
+<script src="src/modules/desktop.js"></script>
 <!-- 精灵主题（可扩展） -->
 <script src="src/pet-themes/registry.js"></script>
 <script src="src/pet-themes/dragon.js"></script>
