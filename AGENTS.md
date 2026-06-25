@@ -95,65 +95,82 @@
 | VS Code 任务 | 运行「启动后端服务」任务 |
 | 直接打开 `index.html` | 前端自动检测后端状态，未连接时显示提示 |
 
-## 前端模块架构
+## 前端模块架构 — 三文件分离原则
 
-```
-index.html              ← 壳页面（HTML 结构 + CSS 引用 + script 加载）
-styles.css              ← 独立样式文件
-src/
-  app.js                ← 全局 App 命名空间 + Tab 切换
-  main.js               ← 初始化 + 兼容层 + 后端自动连接
-  data/
-    store.js            ← Store 状态管理（观察者模式/单一数据源）
-                           提供: Store.data, Store.save(), Store.getCurrentStudent()
-                           订阅: Store.subscribe(path, callback)
-  utils/
-    ui.js               ← UI 工具函数（toast, confirm, shuffle, weightedRandomIndex 等）
-  modules/
-    practice.js         ← 出题 / 批改 / 打印 / 已保存练习
-    library.js          ← 字库管理 / 分类管理 / 组词 / 批量导入
-    history.js          ← 历史记录 / 修改 / 详情 / 常错字排行
-    dict.js             ← 字典浏览 / 拼音编辑 / 字统计
-    stats.js            ← 成绩统计 ECharts 折线图
-```
+每个桌面 App 的 HTML 代码必须封装在对应的 JS 模块文件中，`index.html` 只保留壳结构。
 
-**模块约定**：
-- 每个模块挂在 `App.ModuleName` 命名空间下（如 `App.Practice.generate()`）
-- 通过 `window.xxx = ...` 暴露兼容层，使 HTML 中 `onclick` 引用保持可用
-- 状态统一通过 `Store` 管理，避免直接修改 `appData` 全局变量
-- 新增功能时在对应模块文件内添加，不要增加 `index.html` 的 `<script>` 标签数
+### 三文件结构
+
+| 文件 | 归属 | 职责 |
+|------|------|------|
+| `index.html` | 壳页面 | 桌面 + 应用窗口框架 + 全局元素（浮动精灵、弹窗、打印区） |
+| `styles.css` | 全局 | 所有样式（桌面、应用窗口、各面板、田字格、精灵等） |
+| `src/modules/desktop.js` | **桌面** | 桌面图标渲染、应用开关、App 注册表 |
+| `src/modules/kanpinyin-app.js` | **看拼音写汉字** | HTML 模板 (`App.KanpinyinApp.HTML`) + 渲染函数 |
+| `src/modules/practice.js` | 看拼音写汉字 | 出题 / 批改 / 打印 / 已保存练习 |
+| `src/modules/library.js` | 看拼音写汉字 | 字库管理 / 分类管理 / 组词 / 批量导入 |
+| `src/modules/history.js` | 看拼音写汉字 | 历史记录 / 修改 / 详情 / 常错字排行 |
+| `src/modules/dict.js` | 看拼音写汉字 | 字典浏览 / 拼音编辑 / 字统计 |
+| `src/modules/stats.js` | 看拼音写汉字 | 成绩统计 ECharts 折线图 |
+| `src/modules/pet.js` | **精灵乐园** | 精灵成长系统 + `PAGE_HTML` 模板 + 渲染函数 |
+| `src/data/store.js` | 全局数据 | Store 状态管理 |
+| `src/utils/ui.js` | 全局工具 | UI 工具函数 |
+| `src/app.js` | 全局命名空间 | 模块挂载 + Tab 切换 |
+| `src/main.js` | 初始化 | 兼容层 + 后端连接 + 初始化渲染 |
+
+### 核心规则
+
+1. **`index.html` 仅保留壳结构** — 桌面、应用窗口框架（标题栏 + 空 `app-content` 容器）、全局元素（浮动精灵、打印区、Toast、Confirm 弹窗）。每个 App 的 HTML 内容由各自的 JS 模块在运行时渲染注入。
+
+2. **每个 App 自包含 HTML + JS**：
+   - `kanpinyin-app.js`：定义 `App.KanpinyinApp.HTML` 模板字符串，通过 `App.KanpinyinApp.render()` 注入到 `#app-content-kanpinyin`
+   - `pet.js`：定义 `App.Pet.PAGE_HTML` 模板字符串，通过 `App.Pet.renderPage()` 注入到 `#app-content-pet`
+   - 新增 App 时创建对应 `app-xxx.js`，定义 `HTML` 属性和 `render()` 方法
+
+3. **加载顺序**（依赖顺序）：
+   `store.js` → `app.js` → `ui.js` → `practice.js` → `library.js` → `history.js` → `dict.js` → `stats.js` → `kanpinyin-app.js` → `desktop.js` → 精灵主题 → `pet.js` → `main.js`
+
+4. **每个模块挂在 `App.ModuleName` 命名空间下**，通过 `window.xxx = ...` 提供 `onclick` 兼容。
+
+## 桌面架构
+
+应用以类 Windows 桌面形式启动，每个功能作为一个独立 App 在应用窗口中打开。
+
+### 桌面
+- 深色星空壁纸，底部任务栏（含系统名称 + 时钟）
+- 图标网格自动渲染，每个图标含 emoji + 名称 + 描述
+
+### 应用窗口
+- 顶部标题栏含「← 返回桌面」按钮
+- 每个 App 有独立的 `app-content-{id}` 容器
+- 返回桌面时隐藏窗口，显示桌面
+
+### 添加新功能
+1. 在 `src/modules/desktop.js` 的 `App.Desktop.APPS` 数组中添加条目
+2. 创建 `app-xxx.js` 模块文件，定义 `App.XxxApp.HTML` 模板和 `render()` 方法
+3. 在 `index.html` 的 `#appWindow > .app-body` 内添加空容器 `<div class="app-content" id="app-content-xxx"></div>`
+4. 在 `index.html` 的 `<script>` 列表中添加新模块
+5. 在 `desktop.js` 的 `openApp` 中添加初始化分支（如打开时调用 `render()`）
+6. 新功能自动共享全局精灵（`App.Pet`）
 
 ## 界面架构
 
-三个主面板（Tab 切换）+ 字库管理内含两个子 Tab：
+桌面 → 选择 App → 应用窗口（带返回桌面按钮）
 
-### 1. 📝 出题面板
-- 题目数量设置 + 分类筛选（多选）
-- 生成今日练习（临时预览，打印/批改时才记录）
-- 田字格预览、打印、批改
-- 批改模式：默认全对，点击单字切换错误标记
+### App: 📝 看拼音写汉字
+内部包含 5 个 Tab（原全部功能）：
+- **出题面板**：题目数量设置 + 分类筛选（多选），生成今日练习（临时预览，打印/批改时才记录），田字格预览、打印、批改
+- **字库管理面板**：子 Tab「分类管理」（层级分类创建、字分类操作、保存/加载）+ 子 Tab「字词管理」（添加单字/组词/批量导入）
+- **历史记录面板**：统计概览 + 历史练习列表 + 常错字排行
+- **字典面板**：拼音首字母浏览汉字，查看包含该字的词语 + 练习统计
+- **统计面板**：成绩趋势 ECharts 折线图 + 错误类型分析 + 进步周报 + 成就墙
 
-### 2. 📚 字库管理面板
-**子 Tab — 📂 分类管理**：
-- 层级分类创建（年级 → 学期 → 单元 → 课）
-- 字分类操作：勾选多字后点击分类批量分配，或拖拽单个字到分类
-- 保存/加载分类到文件
-
-**子 Tab — 🔤 字词管理**：
-- 添加单字（自动识别拼音，可选分类）
-- 组词（自动组合 + 手动输入）
-- 批量导入（支持智能识别字/词，缺字自动补全拼音）
-- 当前字库与词库列表，带保存/加载按钮
-
-### 3. 📊 历史记录面板
-- 统计概览：总天数、总词数、错词数、正确率
-- 历史练习列表（按日期倒序，每条显示正确率色标）
-- 查看详情（展开当日逐词批改情况）
-- 常错字排行（🥇🥈🥉 标记）
+### App: 🐉 精灵乐园
+- 大精灵展示区 + 进化全览缩略条 + 进化之路 + 形象选择 + 最近成就
 
 ### 学生切换
 - 下拉选择器 + 添加学生按钮
-- 保存学生数据按钮
+- 保存学生数据按钮（在顶栏 💾）
 
 ## 关键函数约定
 

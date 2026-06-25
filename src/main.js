@@ -58,6 +58,9 @@ try {
 // 初始化
 Store.init();
 Store.getCurrentStudent();
+
+// 先渲染看拼音写汉字 App，确保 DOM 元素就绪
+App.KanpinyinApp.render();
 App.UI.renderStudentName();
 
 // ---- 键盘事件绑定 ----
@@ -89,7 +92,7 @@ App.Pet.greet();
 // 初始化桌面（默认显示桌面）
 App.Desktop.init();
 
-// 刷新当前面板（保存在桌面打开后调用）
+// 刷新当前面板
 App.Practice.renderSavedPractices();
 
 // ---- 后端自动连接 ----

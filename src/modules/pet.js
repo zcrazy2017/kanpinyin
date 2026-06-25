@@ -879,8 +879,49 @@ App.Pet = {
     });
   },
 
-  /** 外部：当 tab 切换到精灵页时也重绘 */
+  /** 精灵乐园 HTML 模板 — 静态页面结构 */
+  PAGE_HTML: `
+<div class="pet-page">
+  <div class="pet-hero">
+    <div class="pet-hero-bg">
+      <div id="petShowcaseSprite" class="pet-hero-sprite"></div>
+      <div id="petShowcaseBubble" class="pet-hero-bubble" style="display:none;">
+        <span id="petShowcaseBubbleText"></span>
+      </div>
+    </div>
+    <div class="pet-hero-info">
+      <div class="pet-hero-name" id="petShowcaseName">&#x1F95A; 沉睡</div>
+      <div class="pet-hero-desc" id="petShowcaseDesc">等待被唤醒...</div>
+      <div class="pet-hero-exp-bar"><div class="pet-hero-exp-fill" id="petShowcaseExpFill"></div></div>
+      <div class="pet-hero-exp-text" id="petShowcaseExpText">0 / 50 EXP</div>
+    </div>
+  </div>
+  <div class="pet-evolution-strip" id="petEvolutionStrip"></div>
+  <div class="pet-bottom">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-title" style="font-size:16px;">&#x1F31F; 进化之路</div>
+      <div class="pet-road-list" id="petRoadList"></div>
+    </div>
+    <div class="pet-right-col">
+      <div class="card">
+        <div class="card-title" style="font-size:16px;">&#x1F3A8; 精灵形象</div>
+        <div id="petThemeSelect" class="pet-theme-select"></div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-title" style="font-size:16px;">&#x1F4DC; 最近成就</div>
+        <div id="petRecentActivity"><p class="empty-msg">继续练习，解锁更多成就！</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+  `,
+
+  /** 渲染精灵乐园页面（HTML 结构 + 动态数据） */
   renderPage() {
+    const container = document.getElementById('app-content-pet');
+    if (!container) return;
+    // 先写入静态结构，再填充动态数据
+    container.innerHTML = this.PAGE_HTML;
     this._renderShowcase();
     this._renderEvolutionStrip();
     this._renderRoad();

@@ -71,7 +71,8 @@ App.Desktop = {
     document.getElementById('appWindow').classList.add('active');
 
     // 设置标题
-    document.getElementById('appWindowTitle').textContent = `${app.icon} ${app.name}`;
+    const titleEl = document.getElementById('appWindowTitle');
+    if (titleEl) titleEl.textContent = `${app.icon} ${app.name}`;
 
     // 隐藏所有 App 内容区
     document.querySelectorAll('.app-content').forEach(el => el.classList.remove('active'));
