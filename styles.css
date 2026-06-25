@@ -42,6 +42,13 @@ body {
 .panel { display: none; }
 .panel.active { display: block; }
 
+/* Stats page grid responsive */
+@media (max-width: 700px) {
+  #panel-stats > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ========== Card ========== */
 .card {
   background: #fff; border-radius: 16px; padding: 24px;
@@ -543,4 +550,72 @@ input.count-input { width: 70px; }
 .dict-char-stats .stat-rate {
   font-weight: 600;
   color: #2d3748;
+}
+
+/* ========== Stats Dashboard ========== */
+.stats-dashboard {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 700px) {
+  .stats-dashboard { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+  .stats-dashboard { grid-template-columns: repeat(2, 1fr); }
+}
+
+.stats-dash-item {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+.stats-dash-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.stats-dash-item .dash-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+.stats-dash-item .dash-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.2;
+}
+.stats-dash-item .dash-label {
+  font-size: 11px;
+  color: #a0aec0;
+  margin-top: 2px;
+}
+
+/* 统计面板双列网格 */
+.stats-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 700px) {
+  .stats-grid-2col { grid-template-columns: 1fr; }
+}
+
+/* 紧凑卡片 */
+.stats-card-compact {
+  padding: 18px;
+  margin-bottom: 0;
+}
+
+/* 成就墙卡片 */
+#achievementsList > div {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+#achievementsList > div:hover {
+  z-index: 10;
 }

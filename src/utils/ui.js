@@ -47,11 +47,29 @@ App.UI = {
     }, ms);
   },
 
-  /** 渲染学生姓名 */
+  /** 渲染学生姓名 + 学习连续天数 */
   renderStudentName() {
     const s = Store.getCurrentStudent();
     const el = document.getElementById('studentNameDisplay');
     if (el) el.textContent = s.name;
+    // 显示连续学习天数
+    const streak = Store.computeStreak();
+    const streakEl = document.getElementById('streakDisplay');
+    const countEl = document.getElementById('streakCount');
+    if (streakEl && countEl) {
+      if (streak > 0) {
+        streakEl.style.display = 'inline-flex';
+        streakEl.style.alignItems = 'center';
+        streakEl.style.gap = '4px';
+        countEl.textContent = streak;
+        // 连续天数越长，颜色越醒目
+        if (streak >= 30) streakEl.style.background = 'rgba(237,137,54,0.3)';
+        else if (streak >= 7) streakEl.style.background = 'rgba(72,187,120,0.25)';
+        else streakEl.style.background = 'rgba(255,255,255,0.15)';
+      } else {
+        streakEl.style.display = 'none';
+      }
+    }
   },
 
   /** 随机打乱数组 */

@@ -5,7 +5,9 @@ App.Practice = {
   _currentPractice: null,
   _savedPracticesKey: 'kanpinyin_saved_practices',
 
-  /** 加权随机出题 */
+  /** 百分比三级出题算法
+   *  按题数比例分配：错词巩固 ≤20% + 低频新词 ≤30% + 加权随机补足
+   */
   generate(student, totalWords = 50) {
     const allWords = this.getFilteredWords();
     if (allWords.length === 0) return [];
@@ -13,33 +15,64 @@ App.Practice = {
       return App.UI.shuffle(allWords.map(w => ({ wordId: w.id, chars: w.chars, pinyin: w.pinyin })));
     }
 
+    const result = [];
+    const pickedIdSet = new Set();
+    const wordStats = student.wordStats || {};
+
+    // ---- Tier 1: 错词巩固 (max 20%) ----
     const errorPool = student.errorWordIds || [];
-    const errorCount = Math.min(5, errorPool.length);
-    const pickedErrorIds = new Set();
-    const shuffledError = App.UI.shuffle(errorPool);
-    const errorWords = [];
-    for (let i = 0; i < errorCount; i++) {
-      const wid = shuffledError[i];
-      const w = Store.data.words.find(x => x.id === wid);
-      if (w) {
-        errorWords.push({ wordId: w.id, chars: w.chars, pinyin: w.pinyin });
-        pickedErrorIds.add(w.id);
-      }
+    // 按错误次数加权：错得越多越优先
+    const errorWords = errorPool
+      .map(id => ({ id, w: Store.data.words.find(x => x.id === id) }))
+      .filter(x => x.w && !pickedIdSet.has(x.id));
+    const maxErrorCount = Math.min(
+      Math.max(1, Math.round(totalWords * 0.2)),
+      errorWords.length
+    );
+    // 按错误次数从高到低排序（如果有 wordStats）
+    errorWords.sort((a, b) => {
+      const aWrong = wordStats[a.id]?.wrong || 0;
+      const bWrong = wordStats[b.id]?.wrong || 0;
+      return bWrong - aWrong; // 错得多的优先
+    });
+    for (let i = 0; i < maxErrorCount; i++) {
+      const { id, w } = errorWords[i];
+      result.push({ wordId: id, chars: w.chars, pinyin: w.pinyin });
+      pickedIdSet.add(id);
     }
 
-    const remaining = allWords.filter(w => !pickedErrorIds.has(w.id));
-    const needed = totalWords - errorWords.length;
-    const result = [...errorWords];
-    const pool = [...remaining];
+    // ---- Tier 2: 低频新词 (max 30%) ----
+    const remaining1 = allWords.filter(w => !pickedIdSet.has(w.id));
+    const lowFreqWords = remaining1.filter(w => {
+      const stats = wordStats[w.id];
+      return !stats || stats.total < 3; // 练习次数少于3次视为低频
+    });
+    const maxLowFreqCount = Math.min(
+      Math.max(1, Math.round(totalWords * 0.3)),
+      lowFreqWords.length
+    );
+    const lowFreqPool = App.UI.shuffle(lowFreqWords);
+    for (let i = 0; i < maxLowFreqCount; i++) {
+      const w = lowFreqPool[i];
+      result.push({ wordId: w.id, chars: w.chars, pinyin: w.pinyin });
+      pickedIdSet.add(w.id);
+    }
+
+    // ---- Tier 3: 加权随机补足 ----
+    const remaining2 = allWords.filter(w => !pickedIdSet.has(w.id));
+    const needed = totalWords - result.length;
+    const pool = [...remaining2];
     for (let i = 0; i < needed && pool.length > 0; i++) {
       const idx = App.UI.weightedRandomIndex(pool, w => {
-        const stats = (student.wordStats || {})[w.id];
+        const stats = wordStats[w.id];
         const total = stats ? stats.total : 0;
         return 1 / (total + 1);
       });
       if (idx < 0) break;
-      result.push(pool.splice(idx, 1)[0]);
+      const picked = pool.splice(idx, 1)[0];
+      result.push({ wordId: picked.id, chars: picked.chars, pinyin: picked.pinyin });
     }
+
     return App.UI.shuffle(result);
   },
 
@@ -58,6 +91,45 @@ App.Practice = {
         return info && info.categoryId && expandedIds.has(info.categoryId);
       });
     });
+  },
+
+  /** 更新今日挑战 */
+  updateChallenge() {
+    const el = document.getElementById('dailyChallenge');
+    const textEl = document.getElementById('challengeText');
+    const progressEl = document.getElementById('challengeProgress');
+    const barFill = document.getElementById('challengeBarFill');
+    if (!el || !textEl) return;
+
+    const student = Store.getCurrentStudent();
+    const errorWords = student.errorWordIds || [];
+    const today = new Date().toISOString().slice(0, 10);
+    const todayLog = (student.practiceLog || []).find(l => l.date === today);
+
+    // 今日已消灭的错词数
+    let slainToday = 0;
+    let totalTarget = Math.min(errorWords.length, 5);
+    if (totalTarget === 0) { el.style.display = 'none'; return; }
+
+    if (todayLog) {
+      todayLog.words.forEach(w => {
+        if (errorWords.includes(w.wordId) && (!w.wrongIndices || w.wrongIndices.length === 0)) {
+          slainToday++;
+        }
+      });
+    }
+
+    const past = Math.min(slainToday, totalTarget);
+    const pct = Math.round(past / totalTarget * 100);
+    el.style.display = 'block';
+    textEl.innerHTML = `消灭 <strong>${totalTarget}</strong> 个错词 <span style="color:#e53e3e;">✅ ${past}/${totalTarget}</span>`;
+    if (progressEl) progressEl.textContent = `${pct}%`;
+    if (barFill) barFill.style.width = pct + '%';
+    if (past >= totalTarget) {
+      el.style.background = 'linear-gradient(135deg,#f0fff4,#ebf8ff)';
+      el.style.borderColor = '#48bb78';
+      textEl.innerHTML += ' 🎉 挑战完成！';
+    }
   },
 
   /** 刷新出题面板 */
@@ -135,6 +207,7 @@ App.Practice = {
       correctEl.style.display = 'none';
     }
     this.renderSavedPractices();
+    this.updateChallenge();
   },
 
   /** 生成今日练习 */

@@ -68,9 +68,19 @@ App.Dict = {
       const relatedWords = Store.data.words.filter(w => w.chars.includes(char));
       const stats = this.computeCharStats(char);
       const rateColor = stats.rate >= 90 ? '#38a169' : stats.rate >= 70 ? '#ed8936' : '#e53e3e';
-      html += `<div style="background:#f7fafc;border-radius:10px;padding:12px 16px;border:1px solid #e2e8f0;">
+      const mastery = Store.getCharMasteryLevel(char);
+      const stubborn = Store.isStubbornError(char);
+      const trend = Store.getCharProgressTrend(char);
+      const starColor = mastery.level >= 3 ? '#f6ad55' : mastery.level >= 2 ? '#9f7aea' : '#a0aec0';
+      let trendHtml = '';
+      if (trend.trend === 'up') trendHtml = `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:#f0fff4;color:#38a169;font-size:11px;font-weight:600;">↑${trend.change}%</span>`;
+      else if (trend.trend === 'down') trendHtml = `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:#fff5f5;color:#e53e3e;font-size:11px;font-weight:600;">↓${Math.abs(trend.change)}%</span>`;
+      html += `<div style="background:#f7fafc;border-radius:10px;padding:12px 16px;border:1px solid ${stubborn ? '#fc8181' : '#e2e8f0'};${stubborn ? 'border-left:4px solid #e53e3e;' : ''}">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-          <span style="font-size:24px;font-weight:700;color:#2d3748;width:36px;text-align:center;">${char}</span>
+          <span style="font-size:24px;font-weight:700;color:#2d3748;width:36px;text-align:center;">
+            ${char}${stubborn ? '<span title="顽固错字（近3次练习中多次出错）">🔴</span>' : ''}
+            <span style="font-size:12px;color:${starColor};letter-spacing:2px;display:block;line-height:1;" title="${mastery.label}">${mastery.stars}</span>
+          </span>
           <span id="dictCharPinyin_${char}" style="font-size:14px;color:#667eea;font-weight:500;cursor:pointer;border-bottom:1px dashed #667eea;"
                onclick="App.Dict.editCharPinyin('${char}')" title="点击修改拼音">${charPinyin}</span>
           <span class="dict-char-stats">
@@ -79,6 +89,7 @@ App.Dict = {
               <span class="stat-item stat-correct">✅ ${stats.correct}</span>
               <span class="stat-item stat-wrong">❌ ${stats.wrong}</span>
               <span class="stat-item stat-rate" style="color:${rateColor};">${stats.rate}%</span>
+              ${trendHtml}
             ` : '<span style="font-size:11px;color:#a0aec0;">暂无练习记录</span>'}
           </span>
           <span onclick="App.Dict.deleteChar('${char}')" style="cursor:pointer;font-size:14px;color:#fc8181;" title="删除字">×</span>

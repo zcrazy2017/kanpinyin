@@ -72,6 +72,10 @@ App.History = {
       html += '</div>';
       rankEl.innerHTML = html;
     }
+    // 刷新成就（有练习记录时）
+    if (App.Stats && App.Stats.renderAchievements) App.Stats.renderAchievements();
+    // 刷新复习提醒
+    if (App.Stats && App.Stats.renderReviewUrgency) App.Stats.renderReviewUrgency();
   },
 
   /** 显示详情 */

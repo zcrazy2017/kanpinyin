@@ -17,6 +17,7 @@
       👤 <span id="studentNameDisplay" style="font-weight:600;">同学</span>
       <span onclick="renameStudent()" style="cursor:pointer;font-size:12px;opacity:0.7;border-bottom:1px dashed rgba(255,255,255,0.4);">✎ 改名</span>
     </span>
+    <span id="streakDisplay" style="display:none;font-size:13px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,0.15);">🔥 <span id="streakCount">0</span> 天</span>
     <span id="backendStatus" style="display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,0.15);">
       <span class="status-dot" style="width:8px;height:8px;border-radius:50%;background:#aaa;display:inline-block;"></span>
       <span class="status-text">后端...</span>
@@ -55,6 +56,18 @@
         </div>
         <div id="categoryFilterList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:26px;">
           <span style="font-size:13px;color:#a0aec0;">暂无分类</span>
+        </div>
+      </div>
+      <!-- 今日挑战 -->
+      <div id="dailyChallenge" style="display:none;margin-bottom:12px;padding:10px 14px;background:linear-gradient(135deg,#fff5f5,#fffaf0);border-radius:12px;border:1px solid #fed7d7;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:18px;">🎯</span>
+          <span style="font-size:14px;font-weight:600;color:#c53030;">今日挑战</span>
+          <span id="challengeText" style="font-size:13px;color:#4a5568;"></span>
+          <span id="challengeProgress" style="font-size:12px;color:#718096;"></span>
+          <div id="challengeBar" style="flex:1;min-width:80px;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+            <div id="challengeBarFill" style="height:100%;width:0%;background:linear-gradient(90deg,#48bb78,#38a169);border-radius:4px;transition:width 0.5s;"></div>
+          </div>
         </div>
       </div>
       <div id="practiceStatus">
@@ -256,6 +269,15 @@
         <p class="empty-msg">暂无错字记录</p>
       </div>
     </div>
+
+    <!-- 复习提醒 -->
+    <div class="card" id="reviewUrgencyCard" style="display:none;">
+      <div class="card-title">🔄 待复习字</div>
+      <div style="font-size:13px;color:#718096;margin-bottom:10px;">基于遗忘曲线，以下字需要优先复习</div>
+      <div id="reviewUrgencyList">
+        <p class="empty-msg">暂无需要复习的字</p>
+      </div>
+    </div>
   </div>
 
   <!-- ===== Dict Panel ===== -->
@@ -292,29 +314,95 @@
 
   <!-- ===== Stats Panel ===== -->
   <div class="panel" id="panel-stats">
+
+    <!-- 顶部概览卡片 -->
+    <div class="stats-dashboard" id="statsDashboard" style="display:none;">
+      <div class="stats-dash-item" id="dashDays">
+        <div class="dash-icon">📅</div>
+        <div class="dash-value" id="dashDaysValue">0</div>
+        <div class="dash-label">练习天数</div>
+      </div>
+      <div class="stats-dash-item" id="dashWords">
+        <div class="dash-icon">📝</div>
+        <div class="dash-value" id="dashWordsValue">0</div>
+        <div class="dash-label">总词数</div>
+      </div>
+      <div class="stats-dash-item" id="dashRate">
+        <div class="dash-icon">📈</div>
+        <div class="dash-value" id="dashRateValue">0%</div>
+        <div class="dash-label">平均正确率</div>
+      </div>
+      <div class="stats-dash-item" id="dashStreak">
+        <div class="dash-icon">🔥</div>
+        <div class="dash-value" id="dashStreakValue">0</div>
+        <div class="dash-label">连续天数</div>
+      </div>
+      <div class="stats-dash-item" id="dashMastered">
+        <div class="dash-icon">⭐</div>
+        <div class="dash-value" id="dashMasteredValue">0</div>
+        <div class="dash-label">掌握的字</div>
+      </div>
+    </div>
+
+    <!-- 主图表区 -->
     <div class="card">
-      <div class="card-title">📈 成绩统计</div>
-      <div style="margin-bottom:12px;font-size:13px;color:#718096;">
-        查看历史练习成绩趋势，横坐标为日期，纵坐标为正确率。
-      </div>
-      <!-- 日期范围选择 -->
-      <div class="form-row" style="margin-bottom:16px;">
-        <label for="statsStartDate">从</label>
-        <input type="date" id="statsStartDate" style="padding:6px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;">
-        <label for="statsEndDate">至</label>
-        <input type="date" id="statsEndDate" style="padding:6px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;">
-        <button class="btn btn-primary btn-sm" onclick="renderStatsChart()">🔄 更新</button>
-        <button class="btn btn-ghost btn-sm" onclick="setStatsLastMonth()">近一月</button>
-        <button class="btn btn-ghost btn-sm" onclick="setStatsLastWeek()">近一周</button>
-        <button class="btn btn-ghost btn-sm" onclick="setStatsAll()">全部</button>
-      </div>
-      <!-- 图表容器 -->
-      <div id="statsChart" style="width:100%;height:400px;background:#fafbfc;border-radius:12px;border:1px solid #e2e8f0;">
-        <p class="empty-msg">暂无练习数据</p>
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span style="display:flex;align-items:center;gap:6px;"><span style="font-size:20px;">📈</span> 成绩趋势</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="App.Stats.setLastWeek()" style="font-size:11px;padding:4px 10px;">近一周</button>
+          <button class="btn btn-ghost btn-sm" onclick="App.Stats.setLastMonth()" style="font-size:11px;padding:4px 10px;">近一月</button>
+          <button class="btn btn-ghost btn-sm" onclick="App.Stats.setAll()" style="font-size:11px;padding:4px 10px;">全部</button>
+        </div>
       </div>
       <!-- 统计摘要 -->
-      <div id="statsSummary" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;"></div>
+      <div id="statsSummary" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+      <!-- 日期范围选择 -->
+      <div class="form-row" style="margin-bottom:10px;gap:6px;">
+        <label for="statsStartDate" style="font-size:12px;">从</label>
+        <input type="date" id="statsStartDate" style="padding:4px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:inherit;width:110px;">
+        <label for="statsEndDate" style="font-size:12px;">至</label>
+        <input type="date" id="statsEndDate" style="padding:4px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:inherit;width:110px;">
+        <button class="btn btn-primary btn-sm" onclick="App.Stats.renderChart()" style="font-size:11px;padding:4px 10px;">🔄 更新</button>
+      </div>
+      <!-- 图表容器 -->
+      <div id="statsChart" style="width:100%;height:320px;background:#fafbfc;border-radius:12px;border:1px solid #e2e8f0;">
+        <p class="empty-msg">暂无练习数据</p>
+      </div>
     </div>
+
+    <!-- 下方双列网格布局 -->
+    <div class="stats-grid-2col">
+
+      <!-- 左列：错误类型分析 -->
+      <div class="card stats-card-compact" id="errorTypeCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;">
+          <span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">🧩</span> 错误类型</span>
+        </div>
+        <div id="errorTypeContent" style="min-height:30px;"></div>
+      </div>
+
+      <!-- 右列：进步周报 -->
+      <div class="card stats-card-compact" id="weeklyReportCard" style="display:none;">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;font-size:15px;margin-bottom:10px;">
+          <span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">📋</span> 进步周报</span>
+          <span style="font-size:11px;font-weight:400;color:#a0aec0;" id="weeklyReportDate"></span>
+        </div>
+        <div id="weeklyReportContent" style="min-height:30px;"></div>
+      </div>
+
+    </div>
+
+    <!-- 成就墙 -->
+    <div class="card" id="achievementsCard" style="display:none;">
+      <div class="card-title" style="font-size:15px;margin-bottom:10px;">
+        <span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">🏅</span> 成就墙</span>
+      </div>
+      <div id="achievementsProgress" style="margin-bottom:14px;"></div>
+      <div id="achievementsList" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <p class="empty-msg">暂无数据</p>
+      </div>
+    </div>
+
   </div>
 
 </div>
