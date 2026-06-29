@@ -141,4 +141,7 @@ async function autoConnectBackend() {
   updateBackendStatus(false, '❌ 请启动后端');
 }
 
-autoConnectBackend().then(() => { Store.autoLoadDataFiles(); });
+autoConnectBackend().then(() => {
+  Store.autoLoadDataFiles();
+  Store.autoLoadSavedPractices();
+});

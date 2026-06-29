@@ -740,7 +740,7 @@ App.Pet = {
              style="background:${isCurrent ? gradient : '#f7fafc'};${!isUnlocked ? '' : ''}"
              onclick="${clickHandler}">
           <div class="pet-theme-preview">
-            ${info.sprites ? `<img src="data:image/svg+xml,${encodeURIComponent(info.sprites[0])}" style="width:32px;height:32px;" alt="${info.name}">` : info.emoji}
+            ${info.sprites ? info.sprites[0].replace(/width="[^"]*"/, 'width="32"').replace(/height="[^"]*"/, 'height="32"') : info.emoji}
           </div>
           <div class="pet-theme-meta">
             <div class="pet-theme-tname" style="color:${isCurrent ? '#fff' : '#4a5568'}">${info.emoji} ${info.name}</div>

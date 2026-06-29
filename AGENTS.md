@@ -69,6 +69,24 @@
 - 新词按 `1 / (total + 1)` 加权随机选取，练习次数越少越优先
 - 练习仅在"打印"或"提交批改"时写入 `practiceLog`，生成时可自由重新出题
 - 数据可保存到 `data/` 目录下的 JSON 文件（分 `dict.json`, `words.json`, `categories.json`, `students.json`）
+- 词语拼音矫正后自动标记 `pinyinFixed: true`，再次矫正时跳过
+
+## 词类型定义
+
+今日练习中每个词显示的类型标签，基于**历史出题记录（practiceLog）** 判断：
+
+| 类型 | 标签 | 定义 |
+|------|------|------|
+| 🆕 新词 | `新词` | 从未出现在任何历史 practiceLog 记录中 |
+| 🔄 复习 | `复习` | 历史记录中**最近一次**出现了该词，且写对了（wrongIndices 为空） |
+| ❌ 错词 | `错词` | 历史记录中**最近一次**出现了该词，且写错了（wrongIndices 非空） |
+
+**判断逻辑**：从 practiceLog 按日期从新到旧遍历，找到该词的最远一条记录，根据当时是否写错来决定类型。
+
+**数据字段说明**：
+- `wordStats[wordId]`：由 practiceLog 计算得出的统计数据，包含 `{ total: 练习总次数, wrong: 错误次数, lastDate: 最近练习日期 }`
+- `errorWordIds`：最近一次练习中写错的词 ID 列表（写对后自动移除）
+- `wordStats` 和 `errorWordIds` 应始终与 practiceLog 保持一致性，可通过脚本从 practiceLog 重新计算
 
 ## 每日出题算法
 

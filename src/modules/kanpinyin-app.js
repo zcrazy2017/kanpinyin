@@ -255,6 +255,8 @@ App.KanpinyinApp = {
       <div class="stats-dash-item" id="dashStreak"><div class="dash-icon">🔥</div><div class="dash-value" id="dashStreakValue">0</div><div class="dash-label">连续天数</div></div>
       <div class="stats-dash-item" id="dashMastered"><div class="dash-icon">⭐</div><div class="dash-value" id="dashMasteredValue">0</div><div class="dash-label">掌握的字</div></div>
     </div>
+
+    <!-- 成绩趋势 -->
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <span style="display:flex;align-items:center;gap:6px;"><span style="font-size:20px;">📈</span> 成绩趋势</span>
@@ -274,19 +276,65 @@ App.KanpinyinApp = {
       </div>
       <div id="statsChart" style="width:100%;height:320px;background:#fafbfc;border-radius:12px;border:1px solid #e2e8f0;"><p class="empty-msg">暂无练习数据</p></div>
     </div>
+
+    <!-- 统计网格 -->
     <div class="stats-grid-2col">
+      <div class="card stats-card-compact" id="calendarCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">📅</span> 学习日历</span></div>
+        <div id="calendarContent" style="min-height:30px;"></div>
+      </div>
+      <div class="card stats-card-compact" id="comparisonCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">📊</span> 成绩趋势对比</span></div>
+        <div id="comparisonContent" style="min-height:30px;"></div>
+      </div>
+    </div>
+
+    <div class="stats-grid-2col">
+      <div class="card stats-card-compact" id="categoryMasteryCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">📂</span> 分类掌握度</span></div>
+        <div id="categoryMasteryContent" style="min-height:30px;"></div>
+      </div>
       <div class="card stats-card-compact" id="errorTypeCard" style="display:none;">
         <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">🧩</span> 错误类型</span></div>
         <div id="errorTypeContent" style="min-height:30px;"></div>
       </div>
-      <div class="card stats-card-compact" id="weeklyReportCard" style="display:none;">
-        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;font-size:15px;margin-bottom:10px;">
-          <span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">📋</span> 进步周报</span>
-          <span style="font-size:11px;font-weight:400;color:#a0aec0;" id="weeklyReportDate"></span>
-        </div>
-        <div id="weeklyReportContent" style="min-height:30px;"></div>
+    </div>
+
+    <div class="card" id="initialFinalCard" style="display:none;">
+      <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">🔤</span> 声韵母错题集</span></div>
+      <div id="initialFinalContent" style="min-height:30px;"></div>
+    </div>
+
+    <div class="stats-grid-2col">
+      <div class="card stats-card-compact" id="masteryProgressCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">⭐</span> 分级掌握进度</span></div>
+        <div id="masteryProgressContent" style="min-height:30px;"></div>
+      </div>
+      <div class="card stats-card-compact" id="remainingCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">🎯</span> 剩余学习量</span></div>
+        <div id="remainingContent" style="min-height:30px;"></div>
       </div>
     </div>
+
+    <div class="stats-grid-2col">
+      <div class="card stats-card-compact" id="wordReErrorCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">🔄</span> 错词复现率</span></div>
+        <div id="wordReErrorContent" style="min-height:30px;"></div>
+      </div>
+      <div class="card stats-card-compact" id="perfectPracticeCard" style="display:none;">
+        <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">💯</span> 完美练习统计</span></div>
+        <div id="perfectPracticeContent" style="min-height:30px;"></div>
+      </div>
+    </div>
+
+    <div class="card" id="weeklyReportCard" style="display:none;">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;font-size:15px;margin-bottom:10px;">
+        <span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">📋</span> 进步周报</span>
+        <span style="font-size:11px;font-weight:400;color:#a0aec0;" id="weeklyReportDate"></span>
+      </div>
+      <div id="weeklyReportContent" style="min-height:30px;"></div>
+    </div>
+
     <div class="card" id="achievementsCard" style="display:none;">
       <div class="card-title" style="font-size:15px;margin-bottom:10px;"><span style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;">🏅</span> 成就墙</span></div>
       <div id="achievementsProgress" style="margin-bottom:14px;"></div>

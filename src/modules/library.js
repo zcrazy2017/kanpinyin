@@ -137,32 +137,50 @@ App.Library = {
     this._pinyinDetectTimer = setTimeout(() => this.detectPinyin(ch), 200);
   },
 
-  // ---- 刷新所有拼音 ----
+  // ---- 刷新所有拼音（字+词）----
 
   async refreshAllPinyin() {
     const entries = Object.entries(Store.data.dict);
     if (entries.length === 0) { App.UI.toast('字库为空', 'info'); return; }
     const btn = document.querySelector('button[onclick*="refreshAllPinyin"]');
     if (btn) btn.disabled = true;
-    let updated = 0;
+    App.UI.toast('⏳ 正在矫正拼音...', 'info');
+
+    // ── Step 1: 矫正所有字的拼音 ──
+    let charUpdated = 0;
     for (const [ch, info] of entries) {
       try {
         const resp = await fetch(`http://localhost:5001/api/pinyin?char=${encodeURIComponent(ch)}`);
         if (resp.ok) {
           const data = await resp.json();
           const py = (data.pinyins || [])[0];
-          if (py && py !== info.pinyin) { info.pinyin = py; updated++; }
+          if (py && py !== info.pinyin) { info.pinyin = py; charUpdated++; }
         }
       } catch (e) { /* skip */ }
     }
-    if (updated > 0) {
-      Store.data.words.forEach(w => {
-        w.pinyin = w.chars.map(ch => Store.data.dict[ch]?.pinyin || '?').join(' ');
-      });
+
+    // ── Step 2: 矫正词的拼音（跳过已矫正的词）──
+    let wordUpdated = 0;
+    let wordSkipped = 0;
+    for (const w of Store.data.words) {
+      // 已标记为已矫正 → 跳过
+      if (w.pinyinFixed) { wordSkipped++; continue; }
+
+      const correctPinyin = w.chars.map(ch => Store.data.dict[ch]?.pinyin || '?').join(' ');
+      if (correctPinyin !== w.pinyin) {
+        w.pinyin = correctPinyin;
+        w.pinyinFixed = true; // 标记为已矫正
+        wordUpdated++;
+      }
+    }
+
+    if (charUpdated > 0 || wordUpdated > 0) {
       Store.save();
     }
     if (btn) btn.disabled = false;
-    App.UI.toast(`已完成拼音刷新，${updated} 个字已更新`);
+
+    const msg = `✅ 拼音矫正完成：${charUpdated} 个字已更新，${wordUpdated} 个词已更新${wordSkipped > 0 ? `，${wordSkipped} 个词已跳过（已矫正）` : ''}`;
+    App.UI.toast(msg);
     this.refresh();
     if (App.Dict) App.Dict.render();
   },
@@ -528,6 +546,18 @@ App.Library = {
     } else {
       treeEl.innerHTML = this.renderCategoryTreeHtml(Store.data.categories, 0);
     }
+    // 在分类树末尾添加「未分类」虚拟节点
+    const uncatCount = Object.values(Store.data.dict).filter(d => !d.categoryId).length;
+    const isActive = this._activeAddCatId === '_uncategorized';
+    treeEl.innerHTML += `<div style="padding:4px 6px;margin:2px 0;border-radius:6px;
+      background:${isActive ? '#d6e4ff' : '#f7fafc'};
+      display:flex;align-items:center;gap:6px;
+      border:2px solid ${isActive ? '#667eea' : 'transparent'};
+      cursor:pointer;" onclick="App.Library.showAddCharsToCategory('_uncategorized','未分类')">
+      <span style="width:18px;"></span>
+      <span style="font-weight:600;">📂 未分类</span>
+      <span style="font-size:12px;color:#a0aec0;">(${uncatCount}字)</span>
+    </div>`;
   },
 
   refreshCategoryTreeOnly() { this.renderCategoryTree(); },
@@ -700,10 +730,19 @@ App.Library = {
       container.innerHTML = '<p class="empty-msg" style="padding:4px 0;font-size:13px;">点击分类树中的分类查看其中的字</p>';
       return;
     }
-    const expandedIds = Store.getCategoryAndDescendantIds(catId);
-    const chars = Object.entries(Store.data.dict)
-      .filter(([ch, info]) => info.categoryId && expandedIds.has(info.categoryId))
-      .sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+
+    let chars;
+    if (catId === '_uncategorized') {
+      // 未分类：显示所有没有 categoryId 的字
+      chars = Object.entries(Store.data.dict)
+        .filter(([ch, info]) => !info.categoryId)
+        .sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+    } else {
+      const expandedIds = Store.getCategoryAndDescendantIds(catId);
+      chars = Object.entries(Store.data.dict)
+        .filter(([ch, info]) => info.categoryId && expandedIds.has(info.categoryId))
+        .sort((a, b) => a[0].localeCompare(b[0], 'zh'));
+    }
     let html = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
       <span style="font-size:15px;font-weight:600;color:#2d3748;">📁 ${catName}</span>
       <span style="font-size:13px;color:#a0aec0;">${chars.length} 个字</span></div>`;

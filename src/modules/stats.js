@@ -1,5 +1,5 @@
 // ============================================================
-//  Stats Module — 成绩统计 ECharts 折线图
+//  Stats Module — 全面成绩统计（仪表盘+8大新统计+成就墙）
 // ============================================================
 App.Stats = {
   /** 渲染统计页面 */
@@ -11,9 +11,17 @@ App.Stats = {
     }
     this.renderDashboard();
     this.setLastMonth();
-    this.renderAchievements();
+    this.renderCalendar();
+    this.renderComparison();
+    this.renderCategoryMastery();
     this.renderErrorTypeAnalysis();
+    this.renderInitialFinal();
+    this.renderMasteryProgress();
+    this.renderRemaining();
+    this.renderWordReError();
+    this.renderPerfectPractice();
     this.renderWeeklyReport();
+    this.renderAchievements();
   },
 
   /** 渲染顶部概览仪表盘 */
@@ -236,6 +244,7 @@ App.Stats = {
     achievements.forEach((a, idx) => {
       const c = colorSchemes[idx % colorSchemes.length];
       if (a.unlocked) {
+        const dateDisplay = a.unlockedDate ? `<div style="font-size:8px;color:${c.text};opacity:0.5;margin-top:1px;">📅 ${a.unlockedDate}</div>` : '';
         html += `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:16px 18px 12px;background:${c.bg};border:2.5px solid ${c.border};border-radius:18px;font-size:12px;min-width:115px;box-shadow:${c.glow},0 1px 3px rgba(0,0,0,0.06);cursor:default;"
           onmouseover="this.style.transform='scale(1.1)translateY(-3px)';this.style.boxShadow='${c.glow},0 6px 20px rgba(0,0,0,0.12)'"
           onmouseout="this.style.transform='scale(1)translateY(0)';this.style.boxShadow='${c.glow},0 1px 3px rgba(0,0,0,0.06)'">
@@ -243,6 +252,7 @@ App.Stats = {
           <div style="font-weight:700;color:${c.text};font-size:13px;text-align:center;line-height:1.3;">${a.label}</div>
           <div style="font-size:10px;color:${c.text};opacity:0.65;text-align:center;line-height:1.3;">${a.desc}</div>
           <div style="font-size:9px;color:#48bb78;font-weight:600;margin-top:2px;">✅ 已解锁</div>
+          ${dateDisplay}
         </div>`;
       } else {
         html += `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:16px 18px 12px;background:#f7fafc;border:2.5px dashed #e2e8f0;border-radius:18px;font-size:12px;min-width:115px;opacity:0.7;filter:grayscale(0.5);">
@@ -416,6 +426,244 @@ App.Stats = {
   /** 刷新周报（供按钮事件调用） */
   refreshWeeklyReport() {
     this.renderWeeklyReport();
+  },
+
+  // ═══════════════ ① 学习日历 ═══════════════
+
+  renderCalendar() {
+    const card = document.getElementById('calendarCard');
+    const content = document.getElementById('calendarContent');
+    if (!card || !content) return;
+    const data = Store.getDailyPracticeData();
+    if (data.length === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const now = new Date(); const weeks = [];
+    for (let w = 11; w >= 0; w--) {
+      const start = new Date(now); start.setDate(start.getDate() - start.getDay() - w * 7);
+      const days = [];
+      for (let d = 0; d < 7; d++) {
+        const dt = new Date(start); dt.setDate(dt.getDate() + d);
+        const ds = dt.toISOString().slice(0, 10);
+        const entry = data.find(x => x.date === ds);
+        days.push({ date: ds, count: entry ? entry.count : 0, rate: entry ? entry.rate : -1 });
+      }
+      weeks.push(days);
+    }
+    const getColor = r => r < 0 ? '#f7fafc' : r >= 100 ? '#c6f6d5' : r >= 80 ? '#9ae6b4' : r >= 60 ? '#fefcbf' : '#fed7d7';
+    let h = '<div style="font-size:12px;color:#718096;margin-bottom:8px;">近 12 周练习情况（颜色越绿正确率越高）</div><div style="display:flex;gap:3px;justify-content:center;">';
+    weeks.forEach(w => {
+      h += '<div style="display:flex;flex-direction:column;gap:3px;align-items:center;">';
+      w.forEach(d => {
+        h += `<div title="${d.date}: ${d.count}词, ${d.rate >= 0 ? d.rate + '%' : '无练习'}" style="width:14px;height:14px;border-radius:3px;background:${getColor(d.rate)};border:1px solid #e2e8f0;cursor:pointer;"></div>`;
+      });
+      h += '</div>';
+    });
+    h += '</div><div style="display:flex;gap:8px;justify-content:center;margin-top:8px;font-size:11px;color:#a0aec0;">';
+    h += '<span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#fed7d7;"></span> &lt;60%</span>';
+    h += '<span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#fefcbf;"></span> 60-79%</span>';
+    h += '<span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#9ae6b4;"></span> 80-99%</span>';
+    h += '<span><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#c6f6d5;"></span> 100%</span></div>';
+    content.innerHTML = h;
+  },
+
+  // ═══════════════ ② 成绩趋势对比 ═══════════════
+
+  renderComparison() {
+    const card = document.getElementById('comparisonCard');
+    const content = document.getElementById('comparisonContent');
+    if (!card || !content) return;
+    const comp = Store.getPeriodComparison();
+    if (comp.thisWeek.days === 0 && comp.lastWeek.days === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const chIcon = comp.change > 0 ? '📈' : comp.change < 0 ? '📉' : '➡️';
+    const chColor = comp.change > 0 ? '#38a169' : comp.change < 0 ? '#e53e3e' : '#718096';
+    content.innerHTML = `<div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+      <div style="flex:1;min-width:100px;padding:10px;background:#f7fafc;border-radius:10px;text-align:center;border:1px solid #e2e8f0;">
+        <div style="font-size:12px;color:#718096;margin-bottom:4px;">本周</div>
+        <div style="font-size:20px;font-weight:700;color:${comp.thisWeek.rate >= 90 ? '#38a169' : comp.thisWeek.rate >= 70 ? '#ed8936' : '#e53e3e'};">${comp.thisWeek.rate}%</div>
+        <div style="font-size:11px;color:#a0aec0;">${comp.thisWeek.days}天 · ${comp.thisWeek.words}词</div>
+      </div>
+      <div style="flex:1;min-width:100px;padding:10px;background:#f7fafc;border-radius:10px;text-align:center;border:1px solid #e2e8f0;">
+        <div style="font-size:12px;color:#718096;margin-bottom:4px;">上周</div>
+        <div style="font-size:20px;font-weight:700;color:${comp.lastWeek.rate >= 90 ? '#38a169' : comp.lastWeek.rate >= 70 ? '#ed8936' : '#e53e3e'};">${comp.lastWeek.rate}%</div>
+        <div style="font-size:11px;color:#a0aec0;">${comp.lastWeek.days}天 · ${comp.lastWeek.words}词</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:8px;font-size:13px;font-weight:600;color:${chColor};">
+      ${chIcon} 较上周 ${comp.change > 0 ? '提高' : comp.change < 0 ? '下降' : '持平'} <strong>${Math.abs(comp.change)}%</strong>
+    </div>`;
+  },
+
+  // ═══════════════ ③ 分类掌握度 ═══════════════
+
+  renderCategoryMastery() {
+    const card = document.getElementById('categoryMasteryCard');
+    const content = document.getElementById('categoryMasteryContent');
+    if (!card || !content) return;
+    const cats = Store.getCategoryAccuracy();
+    const list = Object.values(cats).filter(c => c.total > 0).sort((a, b) => a.rate - b.rate);
+    if (list.length === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    let h = '';
+    list.slice(0, 10).forEach(c => {
+      const cl = c.rate >= 90 ? '#48bb78' : c.rate >= 70 ? '#ed8936' : '#e53e3e';
+      h += `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;">
+        <span style="min-width:80px;color:#4a5568;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.name}">${c.name}</span>
+        <div style="flex:1;height:10px;background:#edf2f7;border-radius:5px;overflow:hidden;">
+          <div style="height:100%;width:${c.rate}%;background:${cl};border-radius:5px;transition:width 0.5s;"></div>
+        </div>
+        <span style="min-width:50px;text-align:right;font-weight:600;color:${cl};">${c.rate}%</span>
+        <span style="font-size:10px;color:#a0aec0;min-width:40px;text-align:right;">${c.total}练</span>
+      </div>`;
+    });
+    if (list.length > 10) h += `<div style="font-size:11px;color:#a0aec0;text-align:center;margin-top:4px;">还有 ${list.length - 10} 个分类...</div>`;
+    content.innerHTML = h;
+  },
+
+  // ═══════════════ ④ 声韵母错题集 ═══════════════
+
+  renderInitialFinal() {
+    const card = document.getElementById('initialFinalCard');
+    const content = document.getElementById('initialFinalContent');
+    if (!card || !content) return;
+    const s = Store.getInitialFinalErrorStats();
+    if (!s.initials.some(i => i.wrong > 0) && !s.finals.some(f => f.wrong > 0)) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const renderBar = (items, title, emoji) => {
+      const top = items.filter(i => i.wrong > 0).slice(0, 8);
+      if (top.length === 0) return '';
+      let h = `<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:6px;">${emoji} ${title}</div>`;
+      top.forEach(i => {
+        const p = Math.min(i.wrong / Math.max(i.total, 1) * 100, 100);
+        h += `<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:2px 0;">
+          <span style="min-width:30px;font-weight:600;color:#2d3748;">${i.name}</span>
+          <div style="flex:1;height:8px;background:#edf2f7;border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:${p}%;background:${i.wrong >= 5 ? '#e53e3e' : '#ed8936'};border-radius:4px;"></div>
+          </div>
+          <span style="min-width:40px;text-align:right;color:#718096;">${i.wrong}/${i.total}</span>
+        </div>`;
+      });
+      h += '</div>'; return h;
+    };
+    let h = '<div style="display:flex;flex-direction:column;gap:4px;">';
+    h += renderBar(s.initials, '易错声母', '🔤');
+    h += renderBar(s.finals, '易错韵母', '🔊');
+    h += '</div>';
+    content.innerHTML = h;
+  },
+
+  // ═══════════════ ⑤ 分级掌握进度 ═══════════════
+
+  renderMasteryProgress() {
+    const card = document.getElementById('masteryProgressCard');
+    const content = document.getElementById('masteryProgressContent');
+    if (!card || !content) return;
+    const d = Store.getMasteryDistribution();
+    if (d.totalChars === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const colors = { 0: '#e2e8f0', 1: '#fbd38d', 2: '#9ae6b4', 3: '#48bb78' };
+    let h = '<div style="display:flex;gap:8px;height:24px;border-radius:12px;overflow:hidden;margin-bottom:10px;">';
+    d.levels.forEach(lv => {
+      if (lv.count > 0) { const p = Math.round(lv.count / d.totalChars * 100);
+        h += `<div style="width:${p}%;background:${colors[lv.level]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:${lv.level === 0 ? '#a0aec0' : '#fff'};min-width:24px;">${p > 5 ? p + '%' : ''}</div>`; }
+    });
+    h += '</div><div style="display:flex;flex-wrap:wrap;gap:6px;font-size:12px;">';
+    d.levels.forEach(lv => {
+      const p = d.totalChars > 0 ? Math.round(lv.count / d.totalChars * 100) : 0;
+      h += `<span style="display:flex;align-items:center;gap:3px;padding:3px 8px;background:#f7fafc;border-radius:6px;border:1px solid #e2e8f0;">
+        ${lv.stars} ${lv.label} <strong style="color:${colors[lv.level]};">${lv.count}</strong> <span style="color:#a0aec0;">(${p}%)</span>
+      </span>`;
+    });
+    h += '</div>';
+    content.innerHTML = h;
+  },
+
+  // ═══════════════ ⑥ 剩余学习量 ═══════════════
+
+  renderRemaining() {
+    const card = document.getElementById('remainingCard');
+    const content = document.getElementById('remainingContent');
+    if (!card || !content) return;
+    const e = Store.getRemainingStudyEstimate();
+    if (e.totalChars === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const dt = e.remainingDays >= 365 ? '超过一年' : `约 ${e.remainingDays} 天`;
+    content.innerHTML = `
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">
+        <div style="text-align:center;padding:8px 12px;background:#f7fafc;border-radius:10px;min-width:60px;">
+          <div style="font-size:22px;font-weight:700;color:#667eea;">${e.unlearned}</div>
+          <div style="font-size:11px;color:#a0aec0;">未学</div>
+        </div>
+        <div style="text-align:center;padding:8px 12px;background:#f7fafc;border-radius:10px;min-width:60px;">
+          <div style="font-size:22px;font-weight:700;color:#ed8936;">${e.learning}</div>
+          <div style="font-size:11px;color:#a0aec0;">学习中</div>
+        </div>
+        <div style="text-align:center;padding:8px 12px;background:#f7fafc;border-radius:10px;min-width:60px;">
+          <div style="font-size:22px;font-weight:700;color:#48bb78;">${e.mastered}</div>
+          <div style="font-size:11px;color:#a0aec0;">已掌握</div>
+        </div>
+      </div>
+      <div style="width:100%;height:10px;background:#edf2f7;border-radius:5px;overflow:hidden;margin-bottom:8px;">
+        <div style="height:100%;width:${e.progress}%;background:linear-gradient(90deg,#667eea,#48bb78);border-radius:5px;transition:width 0.5s;"></div>
+      </div>
+      <div style="font-size:12px;color:#718096;text-align:center;">
+        每日练习 <strong>${e.avgPerDay}</strong> 词，预计还需 <strong style="color:#667eea;">${dt}</strong> 掌握全部 ${e.totalChars} 个字
+      </div>`;
+  },
+
+  // ═══════════════ ⑦ 错词复现率 ═══════════════
+
+  renderWordReError() {
+    const card = document.getElementById('wordReErrorCard');
+    const content = document.getElementById('wordReErrorContent');
+    if (!card || !content) return;
+    const s = Store.getWordReErrorStats();
+    if (s.total === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    const t = s.rarely + s.sometimes + s.often;
+    const rp = t > 0 ? Math.round(s.rarely / t * 100) : 0;
+    const sp = t > 0 ? Math.round(s.sometimes / t * 100) : 0;
+    const op = t > 0 ? Math.round(s.often / t * 100) : 0;
+    content.innerHTML = `
+      <div style="display:flex;gap:4px;height:24px;border-radius:12px;overflow:hidden;margin-bottom:10px;">
+        <div style="width:${rp}%;background:#c6f6d5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#22543d;min-width:24px;">${rp > 8 ? '从未错' : ''}</div>
+        <div style="width:${sp}%;background:#fefcbf;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#975a16;min-width:24px;">${sp > 8 ? '偶错' : ''}</div>
+        <div style="width:${op}%;background:#fed7d7;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#9b2c2c;min-width:24px;">${op > 8 ? '反复错' : ''}</div>
+      </div>
+      <div style="display:flex;justify-content:space-around;font-size:12px;">
+        <span style="color:#38a169;">🟢 从未错 <strong>${s.rarely}</strong></span>
+        <span style="color:#d69e2e;">🟡 偶尔错 <strong>${s.sometimes}</strong></span>
+        <span style="color:#e53e3e;">🔴 反复错 <strong>${s.often}</strong></span>
+      </div>`;
+  },
+
+  // ═══════════════ ⑧ 完美练习统计 ═══════════════
+
+  renderPerfectPractice() {
+    const card = document.getElementById('perfectPracticeCard');
+    const content = document.getElementById('perfectPracticeContent');
+    if (!card || !content) return;
+    const s = Store.getPerfectPracticeStats();
+    if (s.totalCount === 0) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    content.innerHTML = `
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
+        <div style="text-align:center;padding:8px 14px;background:#f0fff4;border-radius:10px;border:1px solid #c6f6d5;">
+          <div style="font-size:22px;font-weight:700;color:#38a169;">${s.perfectCount}</div>
+          <div style="font-size:11px;color:#718096;">完美练习</div>
+        </div>
+        <div style="text-align:center;padding:8px 14px;background:#f7fafc;border-radius:10px;border:1px solid #e2e8f0;min-width:60px;">
+          <div style="font-size:22px;font-weight:700;color:#667eea;">${s.rate}%</div>
+          <div style="font-size:11px;color:#718096;">完美率</div>
+        </div>
+        <div style="text-align:center;padding:8px 14px;background:#fffbeb;border-radius:10px;border:1px solid #fefcbf;">
+          <div style="font-size:22px;font-weight:700;color:#d69e2e;">🔥 ${s.maxStreak}</div>
+          <div style="font-size:11px;color:#718096;">最长连对</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#718096;text-align:center;background:#f7fafc;padding:6px 10px;border-radius:8px;">
+        ${s.currentStreak > 0 ? `当前连续 ${s.currentStreak} 次全对 ✅` : `共 ${s.totalCount} 次练习`}
+      </div>`;
   },
 };
 

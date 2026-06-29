@@ -42,6 +42,18 @@ App.History = {
         const wCount = (l.words || []).length;
         const wWrong = (l.words || []).filter(w => w.wrongIndices && w.wrongIndices.length > 0).length;
         const rate = wCount > 0 ? Math.round((wCount - wWrong) / wCount * 100) : 100;
+        // 统计该次练习中各词类型（回溯到当日之前的记录）
+        let nNew = 0, nReview = 0, nError = 0;
+        (l.words || []).forEach(w => {
+          const type = App.Practice.getWordTypeAtDate(w.wordId, l.date);
+          if (type === 'new') nNew++;
+          else if (type === 'review') nReview++;
+          else nError++;
+        });
+        const typeInfo = [];
+        if (nNew > 0) typeInfo.push(`<span style="color:#667eea;">🆕${nNew}</span>`);
+        if (nReview > 0) typeInfo.push(`<span style="color:#48bb78;">🔄${nReview}</span>`);
+        if (nError > 0) typeInfo.push(`<span style="color:#e53e3e;">❌${nError}</span>`);
         html += `<div style="padding:10px 14px;background:#f7fafc;border-radius:10px;margin-bottom:6px;
                   display:flex;align-items:center;gap:8px;flex-wrap:wrap;
                   border-left:4px solid ${rate === 100 ? '#48bb78' : rate >= 80 ? '#ed8936' : '#fc8181'};">
@@ -49,6 +61,7 @@ App.History = {
           <span style="font-size:13px;color:#4a5568;">${wCount} 词</span>
           <span style="font-size:13px;color:${wWrong > 0 ? '#e53e3e' : '#48bb78'};">${wWrong > 0 ? `❌ 错 ${wWrong}` : '✅ 全对'}</span>
           <span style="font-size:13px;color:#718096;">${rate}%</span>
+          <span style="font-size:11px;display:flex;gap:4px;">${typeInfo.join(' ')}</span>
           <button class="btn btn-ghost btn-sm" onclick="App.History.loadToPractice(${li})">📂 加载到出题</button>
           <button class="btn btn-ghost btn-sm" onclick="App.History.showDetail(${li})">📋 详情</button>
           <button class="btn btn-ghost btn-sm" onclick="App.History.editLog(${li})">✏️ 修改</button>
@@ -102,7 +115,7 @@ App.History = {
     App.switchTab('practice');
   },
 
-  /** 显示详情 */
+  /** 显示详情（含词类型标签） */
   showDetail(logIndex) {
     const student = Store.getCurrentStudent();
     const log = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date))[logIndex];
@@ -111,6 +124,7 @@ App.History = {
     const words = (log.words || []).map(w => {
       const wordObj = Store.data.words.find(x => x.id === w.wordId);
       return {
+        wordId: w.wordId,
         chars: w.chars || (wordObj ? wordObj.chars : []),
         pinyin: w.pinyin || (wordObj ? wordObj.pinyin : ''),
         wrongIndices: w.wrongIndices || [],
@@ -124,6 +138,12 @@ App.History = {
       <div style="display:flex;flex-wrap:wrap;gap:8px;">`;
     words.forEach((w, i) => {
       const wrongTypes = w.wrongTypes || {};
+      // 获取词类型（回溯到当日之前的记录）
+      const wordType = App.Practice.getWordTypeAtDate(w.wordId, log.date);
+      const typeLabel = wordType === 'new' ? '新词' : wordType === 'error' ? '错词' : '复习';
+      const typeColor = wordType === 'new' ? '#667eea' : wordType === 'error' ? '#e53e3e' : '#48bb78';
+      const typeBg = wordType === 'new' ? '#ebf4ff' : wordType === 'error' ? '#fff5f5' : '#f0fff4';
+
       const charEls = w.chars.map((ch, ci) => {
         const isWrong = w.wrongIndices.includes(ci);
         const errType = isWrong ? (wrongTypes[ci] || 'wrong_char') : '';
@@ -134,7 +154,9 @@ App.History = {
       }).join('');
       detailHtml += `<div style="display:flex;align-items:center;gap:6px;padding:4px 10px;background:#f7fafc;border-radius:8px;font-size:14px;border:1px solid ${w.wrongIndices.length > 0 ? '#fc8181' : '#e2e8f0'};">
         <span style="color:#a0aec0;font-size:12px;">${i + 1}.</span>
-        <span style="color:#667eea;font-size:12px;">${w.pinyin}</span>${charEls}</div>`;
+        <span style="color:#667eea;font-size:12px;">${w.pinyin}</span>${charEls}
+        <span style="font-size:10px;padding:1px 5px;border-radius:6px;background:${typeBg};color:${typeColor};font-weight:600;white-space:nowrap;">${typeLabel}</span>
+      </div>`;
     });
     detailHtml += '</div></div>';
 

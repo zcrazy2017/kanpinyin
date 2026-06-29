@@ -93,45 +93,6 @@ App.Practice = {
     });
   },
 
-  /** 更新今日挑战 */
-  updateChallenge() {
-    const el = document.getElementById('dailyChallenge');
-    const textEl = document.getElementById('challengeText');
-    const progressEl = document.getElementById('challengeProgress');
-    const barFill = document.getElementById('challengeBarFill');
-    if (!el || !textEl) return;
-
-    const student = Store.getCurrentStudent();
-    const errorWords = student.errorWordIds || [];
-    const today = new Date().toISOString().slice(0, 10);
-    const todayLog = (student.practiceLog || []).find(l => l.date === today);
-
-    // 今日已消灭的错词数
-    let slainToday = 0;
-    let totalTarget = Math.min(errorWords.length, 5);
-    if (totalTarget === 0) { el.style.display = 'none'; return; }
-
-    if (todayLog) {
-      todayLog.words.forEach(w => {
-        if (errorWords.includes(w.wordId) && (!w.wrongIndices || w.wrongIndices.length === 0)) {
-          slainToday++;
-        }
-      });
-    }
-
-    const past = Math.min(slainToday, totalTarget);
-    const pct = Math.round(past / totalTarget * 100);
-    el.style.display = 'block';
-    textEl.innerHTML = `消灭 <strong>${totalTarget}</strong> 个错词 <span style="color:#e53e3e;">✅ ${past}/${totalTarget}</span>`;
-    if (progressEl) progressEl.textContent = `${pct}%`;
-    if (barFill) barFill.style.width = pct + '%';
-    if (past >= totalTarget) {
-      el.style.background = 'linear-gradient(135deg,#f0fff4,#ebf8ff)';
-      el.style.borderColor = '#48bb78';
-      textEl.innerHTML += ' 🎉 挑战完成！';
-    }
-  },
-
   /** 刷新出题面板 */
   refresh() {
     Store._data = Store._load(); // 从 localStorage 重新加载
@@ -170,15 +131,21 @@ App.Practice = {
 
     if (this._currentPractice && this._currentPractice.length > 0) {
       const words = this._currentPractice;
+      const stats = this.getPracticeStats(words, today);
       summaryEl.innerHTML = `
         <span class="stat-badge">📅 ${today}</span>
-        <span class="stat-badge">📝 共 <strong>${words.length}</strong> 词</span>`;
+        <span class="stat-badge">📝 共 <strong>${words.length}</strong> 词</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;width:100%;">
+          <span class="stat-badge" style="background:#ebf4ff;color:#667eea;">🆕 新词 <strong>${stats.new}</strong> <span style="font-size:11px;opacity:0.7;">(${stats.newPct}%)</span></span>
+          <span class="stat-badge" style="background:#f0fff4;color:#48bb78;">🔄 复习 <strong>${stats.review}</strong> <span style="font-size:11px;opacity:0.7;">(${stats.reviewPct}%)</span></span>
+          <span class="stat-badge" style="background:#fff5f5;color:#e53e3e;">❌ 错词 <strong>${stats.error}</strong> <span style="font-size:11px;opacity:0.7;">(${stats.errorPct}%)</span></span>
+        </div>`;
       actionsEl.innerHTML = `
         <button class="btn btn-primary" onclick="App.Practice.print()">🖨️ 打印</button>
         <button class="btn btn-warning" onclick="App.Practice.showCorrection()">✏️ 批改</button>
         <button class="btn btn-success" onclick="App.Practice.showSaveModal()">💾 保存练习</button>
         <button class="btn btn-outline" onclick="App.Practice.regenerate()">🔄 重新出题</button>`;
-      previewEl.innerHTML = this.renderPreview(words);
+      previewEl.innerHTML = this.renderPreview(words, today);
       correctEl.style.display = 'none';
     } else if (existingLog) {
       const words = existingLog.words.map(w => {
@@ -187,15 +154,21 @@ App.Practice = {
         return wordObj ? { wordId: w.wordId, chars: wordObj.chars, pinyin: wordObj.pinyin, wrongIndices: w.correct === false ? [0] : [] } : null;
       }).filter(Boolean);
       this._currentPractice = words;
+      const stats = this.getPracticeStats(words, today);
       summaryEl.innerHTML = `
         <span class="stat-badge">📅 ${today}</span>
-        <span class="stat-badge">📝 共 <strong>${words.length}</strong> 词</span>`;
+        <span class="stat-badge">📝 共 <strong>${words.length}</strong> 词</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;width:100%;">
+          <span class="stat-badge" style="background:#ebf4ff;color:#667eea;">🆕 新词 <strong>${stats.new}</strong> <span style="font-size:11px;opacity:0.7;">(${stats.newPct}%)</span></span>
+          <span class="stat-badge" style="background:#f0fff4;color:#48bb78;">🔄 复习 <strong>${stats.review}</strong> <span style="font-size:11px;opacity:0.7;">(${stats.reviewPct}%)</span></span>
+          <span class="stat-badge" style="background:#fff5f5;color:#e53e3e;">❌ 错词 <strong>${stats.error}</strong> <span style="font-size:11px;opacity:0.7;">(${stats.errorPct}%)</span></span>
+        </div>`;
       actionsEl.innerHTML = `
         <button class="btn btn-primary" onclick="App.Practice.print()">🖨️ 打印</button>
         <button class="btn btn-warning" onclick="App.Practice.showCorrection()">✏️ 批改</button>
         <button class="btn btn-success" onclick="App.Practice.showSaveModal()">💾 保存练习</button>
         <button class="btn btn-outline" onclick="App.Practice.regenerate()">🔄 重新出题</button>`;
-      previewEl.innerHTML = this.renderPreview(words);
+      previewEl.innerHTML = this.renderPreview(words, today);
       correctEl.style.display = 'none';
     } else {
       summaryEl.innerHTML = `
@@ -239,6 +212,61 @@ App.Practice = {
     this.refresh();
   },
 
+  /** 获取词的类型
+   *  'new'   = 从未出现在历史出题记录中
+   *  'review'= 历史记录中最远一次出现了且写对了
+   *  'error' = 历史记录中最远一次出现了且写错了
+   */
+  getWordType(wordId) {
+    const student = Store.getCurrentStudent();
+    const logs = (student.practiceLog || []).sort((a, b) => b.date.localeCompare(a.date));
+    for (const log of logs) {
+      const entry = (log.words || []).find(w => w.wordId === wordId);
+      if (entry) {
+        const wasWrong = entry.wrongIndices && entry.wrongIndices.length > 0;
+        return wasWrong ? 'error' : 'review';
+      }
+    }
+    return 'new';
+  },
+
+  /** 获取词在某个历史日期时的类型（用于历史记录回溯判断）
+   *  仅考虑该日期之前的练习记录，该日期当天的记录不计入
+   */
+  getWordTypeAtDate(wordId, date) {
+    const student = Store.getCurrentStudent();
+    const beforeLogs = (student.practiceLog || [])
+      .filter(l => l.date < date)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    for (const log of beforeLogs) {
+      const entry = (log.words || []).find(w => w.wordId === wordId);
+      if (entry) {
+        const wasWrong = entry.wrongIndices && entry.wrongIndices.length > 0;
+        return wasWrong ? 'error' : 'review';
+      }
+    }
+    return 'new';
+  },
+
+  /** 获取练习的词类型统计
+   *  @param {string} [date] - 若传入日期则回溯到该日期之前判断
+   */
+  getPracticeStats(words, date) {
+    const counts = { new: 0, review: 0, error: 0 };
+    words.forEach(w => {
+      const type = date ? this.getWordTypeAtDate(w.wordId, date) : this.getWordType(w.wordId);
+      counts[type]++;
+    });
+    const total = words.length;
+    return {
+      ...counts,
+      total,
+      newPct: total > 0 ? Math.round(counts.new / total * 100) : 0,
+      reviewPct: total > 0 ? Math.round(counts.review / total * 100) : 0,
+      errorPct: total > 0 ? Math.round(counts.error / total * 100) : 0,
+    };
+  },
+
   /** 构建田字格 HTML */
   buildTzgWordHtml(word) {
     const chars = word.chars || [];
@@ -252,14 +280,24 @@ App.Practice = {
     return html;
   },
 
-  /** 渲染练习预览 */
-  renderPreview(words) {
+  /** 渲染练习预览（含词类型标签）
+   *  @param {string} [date] - 若传入日期则回溯到该日期之前判断词类型
+   */
+  renderPreview(words, date) {
     if (words.length === 0) return '<p class="empty-msg">暂无练习。</p>';
+    const student = Store.getCurrentStudent();
+    const wordStats = student.wordStats || {};
+    const errorWordIds = student.errorWordIds || [];
     let html = '<div style="display:flex; flex-wrap:wrap; gap:12px 16px; justify-content:center; padding:12px 0;">';
     words.forEach((w, i) => {
+      const type = date ? this.getWordTypeAtDate(w.wordId, date) : this.getWordType(w.wordId);
+      const typeLabel = type === 'new' ? '新词' : type === 'error' ? '错词' : '复习';
+      const typeColor = type === 'new' ? '#667eea' : type === 'error' ? '#e53e3e' : '#48bb78';
+      const typeBg = type === 'new' ? '#ebf4ff' : type === 'error' ? '#fff5f5' : '#f0fff4';
       html += `<div style="display:flex; align-items:center; gap:6px; background:#f7fafc; border-radius:10px; padding:6px 10px;">
         <span style="color:#a0aec0; font-size:13px; min-width:20px;">${i + 1}.</span>
         ${this.buildTzgWordHtml(w)}
+        <span style="font-size:11px;padding:2px 6px;border-radius:8px;background:${typeBg};color:${typeColor};font-weight:600;white-space:nowrap;">${typeLabel}</span>
       </div>`;
     });
     html += '</div>';
@@ -437,6 +475,104 @@ App.Practice = {
     }
   },
 
+  /** 更新今日挑战 — 显示进度条 + 任务详情 */
+  updateChallenge() {
+    const el = document.getElementById('dailyChallenge');
+    const textEl = document.getElementById('challengeText');
+    const progressEl = document.getElementById('challengeProgress');
+    const barFill = document.getElementById('challengeBarFill');
+    if (!el || !textEl) return;
+
+    const student = Store.getCurrentStudent();
+    const today = new Date().toISOString().slice(0, 10);
+    const todayLog = (student.practiceLog || []).find(l => l.date === today);
+
+    // 收集今日所有出现的词（从今日练习记录或当前生成的练习中）
+    const todayWords = todayLog ? todayLog.words : (this._currentPractice || []);
+
+    // 统计：今日练习涉及哪些错词，写对了多少
+    let totalTarget = 0;  // 今日错词目标数
+    let slainToday = 0;   // 今日已消灭的错词数
+
+    todayWords.forEach(w => {
+      // 判断这个词在"今日练习前"是不是错词
+      const typeBeforeToday = App.Practice.getWordTypeAtDate(w.wordId, today);
+      if (typeBeforeToday === 'error') {
+        totalTarget++;
+        // 今日是否写对了（如果有 todayLog，看提交结果；否则视为还没写）
+        if (todayLog) {
+          const logEntry = todayLog.words.find(lw => lw.wordId === w.wordId);
+          if (logEntry && (!logEntry.wrongIndices || logEntry.wrongIndices.length === 0)) {
+            slainToday++;
+          }
+        }
+      }
+    });
+
+    // 限制最多 5 个
+    totalTarget = Math.min(totalTarget, 5);
+    slainToday = Math.min(slainToday, totalTarget);
+
+    if (totalTarget === 0) { el.style.display = 'none'; return; }
+
+    const past = slainToday;
+    const pct = Math.round(past / totalTarget * 100);
+    el.style.display = 'block';
+
+    // 今日练习统计数据
+    const curPractice = this._currentPractice;
+    let totalDone = 0, totalWords = 0;
+    if (curPractice && curPractice.length > 0) {
+      totalWords = curPractice.length;
+      if (todayLog) {
+        totalDone = todayLog.words.length;
+      }
+    }
+
+    textEl.innerHTML = `消灭 <strong>${totalTarget}</strong> 个错词 <span style="color:#e53e3e;">✅ ${past}/${totalTarget}</span>
+      <span style="font-size:12px;color:#718096;margin-left:8px;">📝 练习 ${totalDone}/${totalWords} 词</span>`;
+    if (progressEl) progressEl.textContent = `${pct}%`;
+    if (barFill) barFill.style.width = pct + '%';
+
+    if (past >= totalTarget) {
+      el.style.background = 'linear-gradient(135deg,#f0fff4,#ebf8ff)';
+      el.style.borderColor = '#48bb78';
+      textEl.innerHTML += ' 🎉 挑战完成！';
+    } else {
+      el.style.background = 'linear-gradient(135deg,#fff5f5,#fffaf0)';
+      el.style.borderColor = '#fed7d7';
+    }
+  },
+
+  /** 检查今日挑战是否完成，记录完成日期 */
+  _checkChallengeCompletion(student) {
+    const today = new Date().toISOString().slice(0, 10);
+    const todayLog = (student.practiceLog || []).find(l => l.date === today);
+    if (!todayLog) return;
+
+    // 用回溯方式判断今日练习中哪些词在今日前是错词，且今日写对了
+    let totalTarget = 0;
+    let slainToday = 0;
+    todayLog.words.forEach(w => {
+      const typeBeforeToday = App.Practice.getWordTypeAtDate(w.wordId, today);
+      if (typeBeforeToday === 'error') {
+        totalTarget++;
+        const isCorrectToday = !w.wrongIndices || w.wrongIndices.length === 0;
+        if (isCorrectToday) slainToday++;
+      }
+    });
+
+    totalTarget = Math.min(totalTarget, 5);
+    if (totalTarget === 0 || slainToday < totalTarget) return;
+
+    // 挑战完成，记录日期
+    if (!student.challengeCompleteDates) student.challengeCompleteDates = [];
+    if (!student.challengeCompleteDates.includes(today)) {
+      student.challengeCompleteDates.push(today);
+      Store.save();
+    }
+  },
+
   // ---- 打印 ----
 
   print() {
@@ -485,6 +621,10 @@ App.Practice = {
   savePracticesToStorage(practices) {
     try { localStorage.setItem(this._savedPracticesKey, JSON.stringify(practices)); }
     catch (e) { App.UI.toast('保存失败：存储空间不足', 'error'); }
+    // 同步到 data/saved_practices.json（静默，不阻塞）
+    if (window.Store && Store.saveFile) {
+      Store.saveFile('saved_practices').catch(() => {});
+    }
   },
 
   showSaveModal() {

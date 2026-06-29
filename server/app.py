@@ -200,6 +200,7 @@ def create_app() -> Flask:
         'words': os.path.join(DATA_DIR, 'words.json'),
         'categories': os.path.join(DATA_DIR, 'categories.json'),
         'students': os.path.join(DATA_DIR, 'students.json'),
+        'saved_practices': os.path.join(DATA_DIR, 'saved_practices.json'),
     }
 
     def _data_file_path(data_type):

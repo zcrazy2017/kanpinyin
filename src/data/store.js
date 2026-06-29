@@ -143,7 +143,7 @@ const Store = {
   // ---- 文件持久化（通过后端 API） ----
 
   DATA_FILE_NAMES: {
-    dict: '字库', words: '词库', categories: '分类', students: '学生数据',
+    dict: '字库', words: '词库', categories: '分类', students: '学生数据', saved_practices: '已保存练习',
   },
 
   async saveFile(dataType) {
@@ -154,6 +154,9 @@ const Store = {
       else if (dataType === 'words') payload = this._data.words;
       else if (dataType === 'categories') payload = this._data.categories;
       else if (dataType === 'students') payload = this._data.students;
+      else if (dataType === 'saved_practices') {
+        payload = App.Practice.getSavedPractices();
+      }
       else throw new Error('未知类型');
 
       const resp = await fetch(`${DATA_API}/save/${dataType}`, {
@@ -186,6 +189,10 @@ const Store = {
           loaded.forEach(ls => {
             if (!this._data.students.find(s => s.id === ls.id)) this._data.students.push(ls);
           });
+        } else if (dataType === 'saved_practices') {
+          if (Array.isArray(loaded) && loaded.length > 0) {
+            App.Practice.savePracticesToStorage(loaded);
+          }
         }
         this.save();
         App.UI.toast(`📂 ${label} 已加载`);
@@ -228,6 +235,17 @@ const Store = {
     }
     App.refreshAll();
     if (App.Dict) App.Dict.render();
+  },
+
+  /** 启动时静默加载已保存练习 */
+  async autoLoadSavedPractices() {
+    try {
+      const resp = await fetch(`${DATA_API}/load/saved_practices`);
+      const result = await resp.json();
+      if (resp.ok && Array.isArray(result.data) && result.data.length > 0) {
+        App.Practice.savePracticesToStorage(result.data);
+      }
+    } catch (e) { /* 静默失败 */ }
   },
 
   /** 静默加载分类数据（从文件） */
@@ -381,6 +399,7 @@ const Store = {
     const totalDays = dates.length;
     const totalWords = logs.reduce((s, l) => s + (l.words || []).length, 0);
     const streak = this.computeStreak();
+    const unlockDates = student.achievementUnlockDates || {};
 
     // 统计掌握的字数
     const masteredChars = Object.keys(this._data.dict).filter(ch =>
@@ -391,20 +410,60 @@ const Store = {
     const practicedChars = new Set();
     logs.forEach(l => (l.words || []).forEach(w => (w.chars || []).forEach(c => practicedChars.add(c))));
 
+    // 挑战完成次数
+    const challengeDates = student.challengeCompleteDates || [];
+    const challengeCount = challengeDates.length;
+
+    // 辅助：记录成就解锁日期
+    const _recordAndGet = (id, condition, defaultDate) => {
+      if (!condition) return null;
+      if (unlockDates[id]) return unlockDates[id];
+      // 首次解锁，记录日期
+      unlockDates[id] = defaultDate || new Date().toISOString().slice(0, 10);
+      student.achievementUnlockDates = unlockDates;
+      this.save();
+      return unlockDates[id];
+    };
+
+    const today = new Date().toISOString().slice(0, 10);
+    const firstLogDate = dates.length > 0 ? dates[0] : today;
+    const perfectLog = logs.find(l => {
+      const w = l.words || []; return w.length > 0 && w.every(x => !x.wrongIndices || x.wrongIndices.length === 0);
+    });
+    const perfectDate = perfectLog ? perfectLog.date : null;
+
     return [
-      { id: 'first', label: '🎯 初次练习', desc: '完成第一次练习', unlocked: totalDays >= 1, icon: '🎯' },
-      { id: 'week_streak', label: '🔥 七日打卡', desc: '连续学习7天', unlocked: streak >= 7, icon: '🔥' },
-      { id: 'month_streak', label: '💪 月常坚持', desc: '连续学习30天', unlocked: streak >= 30, icon: '💪' },
-      { id: 'hundred_words', label: '📝 百词斩', desc: '累计练习100个词语', unlocked: totalWords >= 100, icon: '📝' },
-      { id: 'thousand_words', label: '📚 千词达人', desc: '累计练习1000个词语', unlocked: totalWords >= 1000, icon: '📚' },
-      { id: 'ten_thousand', label: '🏆 万词王者', desc: '累计练习10000个词语', unlocked: totalWords >= 10000, icon: '🏆' },
-      { id: 'perfect_day', label: '💯 全对日', desc: '某次练习正确率100%', unlocked: logs.some(l => {
-        const w = l.words || []; return w.length > 0 && w.every(x => !x.wrongIndices || x.wrongIndices.length === 0);
-      }), icon: '💯' },
-      { id: 'master_ten', label: '⭐ 初露锋芒', desc: '掌握10个字（三星）', unlocked: masteredChars >= 10, icon: '⭐' },
-      { id: 'master_fifty', label: '🌟 学识渊博', desc: '掌握50个字（三星）', unlocked: masteredChars >= 50, icon: '🌟' },
-      { id: 'master_hundred', label: '👑 汉字大师', desc: '掌握100个字（三星）', unlocked: masteredChars >= 100, icon: '👑' },
-      { id: 'persistent', label: '🔁 屡败屡战', desc: '同一个字错3次后终于写对', unlocked: false, icon: '🔁' }, // 特殊逻辑需额外实现
+      { id: 'first', label: '🎯 初次练习', desc: '完成第一次练习', unlocked: totalDays >= 1, icon: '🎯',
+        unlockedDate: _recordAndGet('first', totalDays >= 1, firstLogDate) },
+      { id: 'week_streak', label: '🔥 七日打卡', desc: '连续学习7天', unlocked: streak >= 7, icon: '🔥',
+        unlockedDate: _recordAndGet('week_streak', streak >= 7) },
+      { id: 'month_streak', label: '💪 月常坚持', desc: '连续学习30天', unlocked: streak >= 30, icon: '💪',
+        unlockedDate: _recordAndGet('month_streak', streak >= 30) },
+      { id: 'hundred_words', label: '📝 百词斩', desc: '累计练习100个词语', unlocked: totalWords >= 100, icon: '📝',
+        unlockedDate: _recordAndGet('hundred_words', totalWords >= 100) },
+      { id: 'thousand_words', label: '📚 千词达人', desc: '累计练习1000个词语', unlocked: totalWords >= 1000, icon: '📚',
+        unlockedDate: _recordAndGet('thousand_words', totalWords >= 1000) },
+      { id: 'ten_thousand', label: '🏆 万词王者', desc: '累计练习10000个词语', unlocked: totalWords >= 10000, icon: '🏆',
+        unlockedDate: _recordAndGet('ten_thousand', totalWords >= 10000) },
+      { id: 'perfect_day', label: '💯 全对日', desc: '某次练习正确率100%', unlocked: !!perfectLog, icon: '💯',
+        unlockedDate: _recordAndGet('perfect_day', !!perfectLog, perfectDate) },
+      { id: 'master_ten', label: '⭐ 初露锋芒', desc: '掌握10个字（三星）', unlocked: masteredChars >= 10, icon: '⭐',
+        unlockedDate: _recordAndGet('master_ten', masteredChars >= 10) },
+      { id: 'master_fifty', label: '🌟 学识渊博', desc: '掌握50个字（三星）', unlocked: masteredChars >= 50, icon: '🌟',
+        unlockedDate: _recordAndGet('master_fifty', masteredChars >= 50) },
+      { id: 'master_hundred', label: '👑 汉字大师', desc: '掌握100个字（三星）', unlocked: masteredChars >= 100, icon: '👑',
+        unlockedDate: _recordAndGet('master_hundred', masteredChars >= 100) },
+      // ── 今日挑战相关成就 ──
+      { id: 'challenge_first', label: '🎯 初战告捷', desc: '首次完成今日挑战（消灭错词）', unlocked: challengeCount >= 1, icon: '🎯',
+        unlockedDate: _recordAndGet('challenge_first', challengeCount >= 1, challengeDates[0] || null) },
+      { id: 'challenge_weekly', label: '📅 挑战达人', desc: '累计完成7次今日挑战', unlocked: challengeCount >= 7, icon: '📅',
+        unlockedDate: _recordAndGet('challenge_weekly', challengeCount >= 7) },
+      { id: 'challenge_monthly', label: '🏅 挑战大师', desc: '累计完成30次今日挑战', unlocked: challengeCount >= 30, icon: '🏅',
+        unlockedDate: _recordAndGet('challenge_monthly', challengeCount >= 30) },
+      // ── 拼音大闯关成就 ──
+      { id: 'pinyin_game_clear', label: '🎮 拼音大师', desc: '完成拼音大闯关全部10关', unlocked: !!student.pinyinGameCleared, icon: '🎮',
+        unlockedDate: _recordAndGet('pinyin_game_clear', !!student.pinyinGameCleared, student.pinyinGameClearDate || null) },
+      { id: 'persistent', label: '🔁 屡败屡战', desc: '同一个字错3次后终于写对', unlocked: false, icon: '🔁', unlockedDate: null },
     ];
   },
 
@@ -617,6 +676,154 @@ const Store = {
       newMasteredCount: newMastered.length,
       errorTypeStats: errTypes,
     };
+  },
+
+  /** 每日练习数据（用于学习日历热力图）
+   *  @returns { Array<{ date, count, wrong, rate }> } 按日期排序
+   */
+  getDailyPracticeData() {
+    const student = this.getCurrentStudent();
+    const logs = (student.practiceLog || []).sort((a, b) => a.date.localeCompare(b.date));
+    return logs.map(l => {
+      const words = l.words || [];
+      const total = words.length;
+      const wrong = words.filter(w => w.wrongIndices && w.wrongIndices.length > 0).length;
+      return { date: l.date, count: total, wrong, rate: total > 0 ? Math.round((total - wrong) / total * 100) : 100 };
+    });
+  },
+
+  /** 声韵母错误统计
+   *  @returns { { initials: {name, wrong, total}[], finals: {name, wrong, total}[] } }
+   */
+  getInitialFinalErrorStats() {
+    const student = this.getCurrentStudent();
+    const logs = student.practiceLog || [];
+    const INITIALS = ['zh','ch','sh','b','p','m','f','d','t','n','l','g','k','h','j','q','x','r','z','c','s','y','w'];
+    const stats = { init: {}, fin: {} };
+    logs.forEach(l => (l.words || []).forEach(w => {
+      (w.chars || []).forEach((c, ci) => {
+        const info = this._data.dict[c];
+        if (!info || !info.pinyin) return;
+        const py = info.pinyin;
+        const isWrong = w.wrongIndices && w.wrongIndices.includes(ci);
+        // 声母
+        let init = '';
+        for (const i of INITIALS) { if (py.startsWith(i)) { init = i; break; } }
+        if (!init) init = '(零声母)';
+        if (!stats.init[init]) stats.init[init] = { total: 0, wrong: 0 };
+        stats.init[init].total++;
+        if (isWrong) stats.init[init].wrong++;
+        // 韵母
+        const final = init ? py.slice(init.length) : py;
+        if (!stats.fin[final]) stats.fin[final] = { total: 0, wrong: 0 };
+        stats.fin[final].total++;
+        if (isWrong) stats.fin[final].wrong++;
+      });
+    }));
+    return {
+      initials: Object.entries(stats.init).map(([k, v]) => ({ name: k, ...v, rate: v.total > 0 ? Math.round((v.total - v.wrong) / v.total * 100) : 100 })).sort((a, b) => b.wrong - a.wrong),
+      finals: Object.entries(stats.fin).map(([k, v]) => ({ name: k, ...v, rate: v.total > 0 ? Math.round((v.total - v.wrong) / v.total * 100) : 100 })).sort((a, b) => b.wrong - a.wrong),
+    };
+  },
+
+  /** 错词复现率统计
+   *  @returns { { rarely, sometimes, often } } 每个词的复现次数
+   */
+  getWordReErrorStats() {
+    const student = this.getCurrentStudent();
+    const logs = (student.practiceLog || []).sort((a, b) => a.date.localeCompare(b.date));
+    const wordErrors = {}; // wordId -> [{ date, wrong }]
+    logs.forEach(l => (l.words || []).forEach(w => {
+      if (!wordErrors[w.wordId]) wordErrors[w.wordId] = [];
+      wordErrors[w.wordId].push({ date: l.date, wrong: (w.wrongIndices || []).length > 0 });
+    }));
+    const result = { rarely: 0, sometimes: 0, often: 0, total: 0 };
+    Object.values(wordErrors).forEach(entries => {
+      const errorCount = entries.filter(e => e.wrong).length;
+      if (errorCount === 0) { result.rarely++; }
+      else if (errorCount <= 1) { result.sometimes++; }
+      else { result.often++; }
+      result.total++;
+    });
+    return result;
+  },
+
+  /** 分级掌握进度
+   *  @returns { { levels: {level, label, count, stars}[], totalChars } }
+   */
+  getMasteryDistribution() {
+    const levelCounts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+    Object.keys(this._data.dict).forEach(ch => {
+      const lv = this.getCharMasteryLevel(ch).level;
+      levelCounts[lv]++;
+    });
+    const labels = { 0: '未学', 1: '初识', 2: '巩固', 3: '掌握' };
+    const stars = { 0: '☆', 1: '⭐', 2: '⭐⭐', 3: '⭐⭐⭐' };
+    return {
+      levels: [0, 1, 2, 3].map(lv => ({ level: lv, label: labels[lv], count: levelCounts[lv], stars: stars[lv] })),
+      totalChars: Object.keys(this._data.dict).length,
+    };
+  },
+
+  /** 剩余学习量估算 */
+  getRemainingStudyEstimate() {
+    const dist = this.getMasteryDistribution();
+    const logs = (this.getCurrentStudent().practiceLog || []).sort((a, b) => a.date.localeCompare(b.date));
+    const unlearned = dist.levels[0].count;
+    const learning = dist.levels[1].count + dist.levels[2].count;
+    const mastered = dist.levels[3].count;
+    // 估算每日练习量
+    let totalDays = logs.length;
+    let avgPerDay = 0;
+    if (totalDays > 0) {
+      const totalWords = logs.reduce((s, l) => s + (l.words || []).length, 0);
+      avgPerDay = Math.round(totalWords / totalDays);
+    }
+    // 假设每天练 avgPerDay 词，每词含约1.5个新字
+    const charsPerDay = Math.max(1, Math.round(avgPerDay * 0.3));
+    const remainingDays = charsPerDay > 0 ? Math.ceil(unlearned / charsPerDay) : 999;
+    return { unlearned, learning, mastered, totalChars: dist.totalChars, avgPerDay, remainingDays, progress: dist.totalChars > 0 ? Math.round(mastered / dist.totalChars * 100) : 0 };
+  },
+
+  /** 成绩趋势对比（本周 vs 上周）
+   *  @returns { { thisWeek: {days, words, rate}, lastWeek: {days, words, rate}, change } }
+   */
+  getPeriodComparison() {
+    const student = this.getCurrentStudent();
+    const logs = (student.practiceLog || []).sort((a, b) => a.date.localeCompare(b.date));
+    const now = new Date();
+    const calcWeek = (offset) => {
+      const start = new Date(now); start.setDate(start.getDate() - start.getDay() - 7 * offset);
+      const end = new Date(start); end.setDate(end.getDate() + 7);
+      const s = start.toISOString().slice(0, 10), e = end.toISOString().slice(0, 10);
+      const weekLogs = logs.filter(l => l.date >= s && l.date < e);
+      const words = weekLogs.reduce((sum, l) => sum + (l.words || []).length, 0);
+      const wrong = weekLogs.reduce((sum, l) => sum + (l.words || []).filter(w => w.wrongIndices?.length > 0).length, 0);
+      return { days: weekLogs.length, words, wrong, rate: words > 0 ? Math.round((words - wrong) / words * 100) : 0 };
+    };
+    const thisWeek = calcWeek(0);
+    const lastWeek = calcWeek(1);
+    return { thisWeek, lastWeek, change: thisWeek.rate - lastWeek.rate };
+  },
+
+  /** 完美练习统计 */
+  getPerfectPracticeStats() {
+    const student = this.getCurrentStudent();
+    const logs = (student.practiceLog || []).sort((a, b) => a.date.localeCompare(b.date));
+    let perfectCount = 0, totalCount = logs.length;
+    let currentStreak = 0, maxStreak = 0;
+    logs.forEach(l => {
+      const isPerfect = (l.words || []).every(w => !w.wrongIndices || w.wrongIndices.length === 0);
+      if (isPerfect) {
+        perfectCount++;
+        currentStreak++;
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+      } else {
+        currentStreak = 0;
+      }
+    });
+    const rate = totalCount > 0 ? Math.round(perfectCount / totalCount * 100) : 0;
+    return { perfectCount, totalCount, rate, maxStreak, currentStreak: totalCount > 0 && (logs[logs.length - 1]?.words || []).every(w => !w.wrongIndices?.length) ? currentStreak : 0 };
   },
 };
 

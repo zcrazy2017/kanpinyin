@@ -19,6 +19,13 @@ App.Desktop = {
       desc: '养成你的精灵伙伴',
       color: '#48bb78',
     },
+    {
+      id: 'pinyingame',
+      name: '拼音大闯关',
+      icon: '🎮',
+      desc: '10关拼音拼字挑战',
+      color: '#9f7aea',
+    },
   ],
 
   /** 当前打开的 App id，null 表示桌面 */
@@ -90,6 +97,8 @@ App.Desktop = {
       this._initKanpinyinApp();
     } else if (appId === 'pet') {
       this._initPetApp();
+    } else if (appId === 'pinyingame') {
+      this._initPinyinGameApp();
     }
   },
 
@@ -113,6 +122,10 @@ App.Desktop = {
 
   _initPetApp() {
     if (App.Pet.renderPage) App.Pet.renderPage();
+  },
+
+  _initPinyinGameApp() {
+    if (App.PinyinGame.renderPage) App.PinyinGame.renderPage();
   },
 
   /** 点击桌面空白区域取消选中（预留） */

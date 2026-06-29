@@ -3,7 +3,43 @@
     "id": "stu1",
     "name": "同学",
     "errorWordIds": [],
-    "wordStats": {},
+    "wordStats": {
+      "6": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "1": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "4": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "0": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "7": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "5": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "8": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      }
+    },
     "practiceLog": [
       {
         "date": "2026-06-23",
@@ -81,7 +117,43 @@
     "id": "stu_mqqdr3jc5xvs",
     "name": "七仔",
     "errorWordIds": [],
-    "wordStats": {},
+    "wordStats": {
+      "4": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "5": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "7": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "8": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "1": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "6": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      },
+      "0": {
+        "total": 1,
+        "wrong": 0,
+        "lastDate": "2026-06-23"
+      }
+    },
     "practiceLog": [
       {
         "date": "2026-06-23",
