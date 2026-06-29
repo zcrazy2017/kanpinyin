@@ -473,6 +473,8 @@ App.Practice = {
       const slainErrors = Math.max(0, beforeCount - afterCount);
       App.Pet.onPracticeSubmitted({ isPerfect, slainErrors, total: log.words.length });
     }
+    // 检查今日挑战是否完成
+    App.Practice._checkChallengeCompletion(student);
   },
 
   /** 更新今日挑战 — 显示进度条 + 任务详情 */

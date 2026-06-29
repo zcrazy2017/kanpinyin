@@ -123,11 +123,10 @@ App.Pet = {
     const svg = sprites[Math.min(stage, sprites.length - 1)];
     const size = this.SHOWCASE_SIZES[stage] || 90;
 
-    // 渲染 SVG（全局精灵与进化页展示同样尺寸）
+    // 渲染 SVG（保持原始 viewBox，只改 width/height）
     const sizedSvg = svg
       .replace(/width="[^"]*"/, `width="${size}"`)
-      .replace(/height="[^"]*"/, `height="${size}"`)
-      .replace(/viewBox="0 0 \d+ \d+"/, 'viewBox="0 0 72 72"');
+      .replace(/height="[^"]*"/, `height="${size}"`);
     container.innerHTML = sizedSvg;
 
     // 更新容器
